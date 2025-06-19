@@ -1,14 +1,22 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Upload, Image, Calendar, Globe, Users, Zap } from 'lucide-react';
+import { ArrowLeft, Upload, Image, Calendar, Globe, Users, Zap, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface PostUploadProps {
   onBack: () => void;
+}
+
+interface PostData {
+  content: string;
+  platforms: string[];
+  scheduledTime: string;
+  images: File[];
 }
 
 const PostUpload = ({ onBack }: PostUploadProps) => {
@@ -16,6 +24,9 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
   const [postContent, setPostContent] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const { toast } = useToast();
 
   const platforms = [
     { id: 'instagram', name: 'Instagram', color: 'bg-pink-500/20 text-pink-400 border-pink-500/30' },
@@ -34,10 +45,48 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
     );
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      setSelectedImages(prev => [...prev, ...Array.from(files)]);
+  const handleImageUpload = (files: FileList | null) => {
+    if (!files) return;
+    
+    const validFiles = Array.from(files).filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isUnder10MB = file.size <= 10 * 1024 * 1024; // 10MB limit
+      
+      if (!isImage) {
+        toast({
+          title: "Invalid file type",
+          description: `${file.name} is not an image file`,
+          variant: "destructive",
+        });
+      }
+      
+      if (!isUnder10MB) {
+        toast({
+          title: "File too large",
+          description: `${file.name} exceeds 10MB limit`,
+          variant: "destructive",
+        });
+      }
+      
+      return isImage && isUnder10MB;
+    });
+
+    if (selectedImages.length + validFiles.length > 10) {
+      toast({
+        title: "Too many files",
+        description: "Maximum 10 images allowed per post",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedImages(prev => [...prev, ...validFiles]);
+    
+    if (validFiles.length > 0) {
+      toast({
+        title: "Images uploaded",
+        description: `${validFiles.length} image(s) added successfully`,
+      });
     }
   };
 
@@ -45,24 +94,130 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageUpload(e.dataTransfer.files);
+    }
+  };
+
+  const validatePost = (): boolean => {
+    if (!postContent.trim()) {
+      toast({
+        title: "Content required",
+        description: "Please add some content to your post",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (selectedPlatforms.length === 0) {
+      toast({
+        title: "Platform required",
+        description: "Please select at least one platform",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const createPost = async (postData: PostData, publishNow: boolean = false) => {
+    if (!validatePost()) return;
+
+    setIsUploading(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log(publishNow ? 'Publishing post now:' : 'Scheduling post:', postData);
+      
+      toast({
+        title: publishNow ? "Post published!" : "Post scheduled!",
+        description: publishNow 
+          ? `Your post has been published to ${postData.platforms.length} platform(s)`
+          : `Your post has been scheduled for ${new Date(postData.scheduledTime).toLocaleString()}`,
+      });
+      
+      // Reset form and go back
+      setPostContent('');
+      setSelectedPlatforms([]);
+      setScheduledTime('');
+      setSelectedImages([]);
+      onBack();
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process your post. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSchedulePost = () => {
-    console.log('Scheduling post:', {
+    if (!scheduledTime) {
+      toast({
+        title: "Schedule time required",
+        description: "Please select a date and time for scheduling",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const postData: PostData = {
       content: postContent,
       platforms: selectedPlatforms,
       scheduledTime,
       images: selectedImages
-    });
-    // Here you would typically send the data to your backend
-    onBack();
+    };
+
+    createPost(postData, false);
   };
 
   const handlePublishNow = () => {
-    console.log('Publishing post now:', {
+    const postData: PostData = {
       content: postContent,
       platforms: selectedPlatforms,
+      scheduledTime: '',
       images: selectedImages
+    };
+
+    createPost(postData, true);
+  };
+
+  const saveDraft = () => {
+    const draftData = {
+      content: postContent,
+      platforms: selectedPlatforms,
+      scheduledTime,
+      images: selectedImages.map(img => img.name) // Save just names for demo
+    };
+    
+    localStorage.setItem('post_draft', JSON.stringify(draftData));
+    
+    toast({
+      title: "Draft saved",
+      description: "Your post has been saved as a draft",
     });
-    // Here you would typically send the data to your backend
+    
     onBack();
   };
 
@@ -102,11 +257,12 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
                 value={postContent}
                 onChange={(e) => setPostContent(e.target.value)}
                 className="min-h-32 bg-muted/30 border-muted focus:border-cyan-500 resize-none"
+                maxLength={2200}
               />
               
               {/* Character Count */}
               <div className="flex justify-between items-center text-sm text-muted-foreground">
-                <span>Characters: {postContent.length}</span>
+                <span>Characters: {postContent.length}/2200</span>
                 <span className="text-cyan-400">✨ AI suggestions available</span>
               </div>
             </CardContent>
@@ -117,13 +273,23 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Image className="w-5 h-5 mr-2 text-cyan-400" />
-                Media
+                Media ({selectedImages.length}/10)
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {/* Upload Area */}
-                <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center hover:border-cyan-500/50 transition-colors">
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                    dragActive 
+                      ? 'border-cyan-500 bg-cyan-500/10' 
+                      : 'border-muted hover:border-cyan-500/50'
+                  }`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                >
                   <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-muted-foreground mb-2">Drag and drop your images here</p>
                   <p className="text-sm text-muted-foreground mb-4">or</p>
@@ -132,13 +298,16 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
                       type="file"
                       multiple
                       accept="image/*"
-                      onChange={handleImageUpload}
+                      onChange={(e) => handleImageUpload(e.target.files)}
                       className="hidden"
                     />
                     <Button variant="outline" className="border-cyan-500/30 hover:border-cyan-500">
                       Browse Files
                     </Button>
                   </label>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Supports: JPG, PNG, GIF, WebP (Max: 10MB each, 10 files total)
+                  </p>
                 </div>
 
                 {/* Selected Images */}
@@ -146,8 +315,12 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
                   <div className="grid grid-cols-3 gap-4">
                     {selectedImages.map((image, index) => (
                       <div key={index} className="relative group">
-                        <div className="aspect-square bg-muted/50 rounded-lg flex items-center justify-center">
-                          <Image className="w-8 h-8 text-muted-foreground" />
+                        <div className="aspect-square bg-muted/50 rounded-lg overflow-hidden">
+                          <img
+                            src={URL.createObjectURL(image)}
+                            alt={`Upload ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                         <Button
                           variant="destructive"
@@ -155,7 +328,7 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
                           onClick={() => removeImage(index)}
                           className="absolute -top-2 -right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          ×
+                          <X className="w-3 h-3" />
                         </Button>
                         <p className="text-xs text-muted-foreground mt-1 truncate">
                           {image.name}
@@ -218,6 +391,7 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
                   value={scheduledTime}
                   onChange={(e) => setScheduledTime(e.target.value)}
                   className="bg-muted/30 border-muted focus:border-cyan-500"
+                  min={new Date().toISOString().slice(0, 16)}
                 />
               </div>
               <div className="text-xs text-muted-foreground">
@@ -232,17 +406,26 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
             <Button 
               onClick={handlePublishNow}
               className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white"
-              disabled={!postContent.trim() || selectedPlatforms.length === 0}
+              disabled={!postContent.trim() || selectedPlatforms.length === 0 || isUploading}
             >
-              <Zap className="w-4 h-4 mr-2" />
-              Publish Now
+              {isUploading ? (
+                <>
+                  <div className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Publish Now
+                </>
+              )}
             </Button>
             
             <Button 
               onClick={handleSchedulePost}
               variant="outline"
               className="w-full border-cyan-500/30 hover:border-cyan-500"
-              disabled={!postContent.trim() || selectedPlatforms.length === 0 || !scheduledTime}
+              disabled={!postContent.trim() || selectedPlatforms.length === 0 || !scheduledTime || isUploading}
             >
               <Calendar className="w-4 h-4 mr-2" />
               Schedule Post
@@ -251,7 +434,8 @@ const PostUpload = ({ onBack }: PostUploadProps) => {
             <Button 
               variant="ghost"
               className="w-full text-muted-foreground hover:text-foreground"
-              onClick={onBack}
+              onClick={saveDraft}
+              disabled={isUploading}
             >
               Save as Draft
             </Button>
