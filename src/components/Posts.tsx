@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Filter, Search, MoreHorizontal, Calendar, Eye, Heart, MessageSquare, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PostUpload from './PostUpload';
 
 const Posts = () => {
   const [activeFilter, setActiveFilter] = useState('all');
+  const [showUpload, setShowUpload] = useState(false);
 
   const posts = [
     {
@@ -60,6 +61,10 @@ const Posts = () => {
     }
   };
 
+  if (showUpload) {
+    return <PostUpload onBack={() => setShowUpload(false)} />;
+  }
+
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       {/* Header */}
@@ -68,7 +73,10 @@ const Posts = () => {
           <h1 className="text-3xl font-bold mb-2">Posts</h1>
           <p className="text-muted-foreground">Manage your content across all platforms</p>
         </div>
-        <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white">
+        <Button 
+          onClick={() => setShowUpload(true)}
+          className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Create Post
         </Button>
