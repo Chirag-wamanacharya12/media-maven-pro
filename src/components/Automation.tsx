@@ -1,5 +1,4 @@
-
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -15,82 +14,247 @@ import {
   Position,
   MarkerType,
   BackgroundVariant,
+  Handle,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Play, Save, Settings, MessageSquare, Users, Share2, Bot, Timer, Filter } from 'lucide-react';
+import { Plus, Play, Save, Settings, MessageSquare, Users, Share2, Bot, Timer, Filter, Trash2, Unlink } from 'lucide-react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from '@/components/ui/context-menu';
 
 // Custom Node Components
-const TriggerNode = ({ data }: { data: any }) => (
-  <div className="bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/50 rounded-lg p-4 min-w-[200px]">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-        <data.icon className="w-4 h-4 text-white" />
-      </div>
-      <span className="font-semibold text-green-400">{data.label}</span>
-    </div>
-    <p className="text-xs text-muted-foreground">{data.description}</p>
-    <div className="flex justify-end mt-2">
-      <div className="w-3 h-3 bg-green-500 rounded-full" 
-           style={{ position: 'absolute', right: '-6px', top: '50%', transform: 'translateY(-50%)' }} />
-    </div>
-  </div>
-);
+const TriggerNode = ({ data, id }: { data: any; id: string }) => {
+  const { deleteElements } = useReactFlow();
+  
+  const handleDelete = () => {
+    deleteElements({ nodes: [{ id }] });
+  };
 
-const ActionNode = ({ data }: { data: any }) => (
-  <div className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/50 rounded-lg p-4 min-w-[200px]">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-        <data.icon className="w-4 h-4 text-white" />
-      </div>
-      <span className="font-semibold text-blue-400">{data.label}</span>
-    </div>
-    <p className="text-xs text-muted-foreground">{data.description}</p>
-    <div className="flex justify-between mt-2">
-      <div className="w-3 h-3 bg-blue-500 rounded-full" 
-           style={{ position: 'absolute', left: '-6px', top: '50%', transform: 'translateY(-50%)' }} />
-      <div className="w-3 h-3 bg-blue-500 rounded-full" 
-           style={{ position: 'absolute', right: '-6px', top: '50%', transform: 'translateY(-50%)' }} />
-    </div>
-  </div>
-);
+  const handleDisconnect = () => {
+    deleteElements({ edges: data.connectedEdges || [] });
+  };
 
-const ConditionNode = ({ data }: { data: any }) => (
-  <div className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/50 rounded-lg p-4 min-w-[200px] transform rotate-45" style={{ borderRadius: '20px' }}>
-    <div className="transform -rotate-45">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-          <data.icon className="w-4 h-4 text-white" />
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div className="bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/50 rounded-lg p-4 min-w-[200px] relative cursor-pointer hover:border-green-400 transition-colors">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+              <data.icon className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-semibold text-green-400">{data.label}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">{data.description}</p>
+          
+          {/* Output Handle */}
+          <Handle
+            type="source"
+            position={Position.Right}
+            className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors"
+            style={{ right: '-6px' }}
+          />
         </div>
-        <span className="font-semibold text-yellow-400">{data.label}</span>
-      </div>
-      <p className="text-xs text-muted-foreground">{data.description}</p>
-    </div>
-  </div>
-);
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+          <Unlink className="w-4 h-4 mr-2" />
+          Disconnect
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDelete} className="text-red-600">
+          <Trash2 className="w-4 h-4 mr-2" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+};
 
-const AINode = ({ data }: { data: any }) => (
-  <div className="bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/50 rounded-lg p-4 min-w-[200px]">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-        <Bot className="w-4 h-4 text-white" />
-      </div>
-      <span className="font-semibold gradient-text">{data.label}</span>
-    </div>
-    <p className="text-xs text-muted-foreground">{data.description}</p>
-    <Badge variant="outline" className="mt-2 text-xs border-purple-500/50">
-      {data.aiModel}
-    </Badge>
-    <div className="flex justify-between mt-2">
-      <div className="w-3 h-3 bg-purple-500 rounded-full" 
-           style={{ position: 'absolute', left: '-6px', top: '50%', transform: 'translateY(-50%)' }} />
-      <div className="w-3 h-3 bg-purple-500 rounded-full" 
-           style={{ position: 'absolute', right: '-6px', top: '50%', transform: 'translateY(-50%)' }} />
-    </div>
-  </div>
-);
+const ActionNode = ({ data, id }: { data: any; id: string }) => {
+  const { deleteElements } = useReactFlow();
+  
+  const handleDelete = () => {
+    deleteElements({ nodes: [{ id }] });
+  };
+
+  const handleDisconnect = () => {
+    deleteElements({ edges: data.connectedEdges || [] });
+  };
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/50 rounded-lg p-4 min-w-[200px] relative cursor-pointer hover:border-blue-400 transition-colors">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+              <data.icon className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-semibold text-blue-400">{data.label}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">{data.description}</p>
+          
+          {/* Input Handle */}
+          <Handle
+            type="target"
+            position={Position.Left}
+            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
+            style={{ left: '-6px' }}
+          />
+          
+          {/* Output Handle */}
+          <Handle
+            type="source"
+            position={Position.Right}
+            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
+            style={{ right: '-6px' }}
+          />
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+          <Unlink className="w-4 h-4 mr-2" />
+          Disconnect
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDelete} className="text-red-600">
+          <Trash2 className="w-4 h-4 mr-2" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+};
+
+const ConditionNode = ({ data, id }: { data: any; id: string }) => {
+  const { deleteElements } = useReactFlow();
+  
+  const handleDelete = () => {
+    deleteElements({ nodes: [{ id }] });
+  };
+
+  const handleDisconnect = () => {
+    deleteElements({ edges: data.connectedEdges || [] });
+  };
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/50 rounded-lg p-4 min-w-[200px] relative cursor-pointer hover:border-yellow-400 transition-colors transform rotate-45" style={{ borderRadius: '20px' }}>
+          <div className="transform -rotate-45">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                <data.icon className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-semibold text-yellow-400">{data.label}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">{data.description}</p>
+          </div>
+          
+          {/* Input Handle */}
+          <Handle
+            type="target"
+            position={Position.Left}
+            className="w-3 h-3 bg-yellow-500 border-2 border-yellow-300 hover:bg-yellow-400 transition-colors transform -rotate-45"
+            style={{ left: '-6px', top: '50%', transform: 'translateY(-50%) rotate(-45deg)' }}
+          />
+          
+          {/* Output Handles for Yes/No */}
+          <Handle
+            id="yes"
+            type="source"
+            position={Position.Top}
+            className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors transform -rotate-45"
+            style={{ top: '-6px', left: '30%', transform: 'translateX(-50%) rotate(-45deg)' }}
+          />
+          <Handle
+            id="no"
+            type="source"
+            position={Position.Bottom}
+            className="w-3 h-3 bg-red-500 border-2 border-red-300 hover:bg-red-400 transition-colors transform -rotate-45"
+            style={{ bottom: '-6px', right: '30%', transform: 'translateX(50%) rotate(-45deg)' }}
+          />
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+          <Unlink className="w-4 h-4 mr-2" />
+          Disconnect
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDelete} className="text-red-600">
+          <Trash2 className="w-4 h-4 mr-2" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+};
+
+const AINode = ({ data, id }: { data: any; id: string }) => {
+  const { deleteElements } = useReactFlow();
+  
+  const handleDelete = () => {
+    deleteElements({ nodes: [{ id }] });
+  };
+
+  const handleDisconnect = () => {
+    deleteElements({ edges: data.connectedEdges || [] });
+  };
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div className="bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/50 rounded-lg p-4 min-w-[200px] relative cursor-pointer hover:border-purple-400 transition-colors">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+              <Bot className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{data.label}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">{data.description}</p>
+          <Badge variant="outline" className="mt-2 text-xs border-purple-500/50 text-purple-400">
+            {data.aiModel}
+          </Badge>
+          
+          {/* Input Handle */}
+          <Handle
+            type="target"
+            position={Position.Left}
+            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
+            style={{ left: '-6px' }}
+          />
+          
+          {/* Output Handle */}
+          <Handle
+            type="source"
+            position={Position.Right}
+            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
+            style={{ right: '-6px' }}
+          />
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+          <Unlink className="w-4 h-4 mr-2" />
+          Disconnect
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDelete} className="text-red-600">
+          <Trash2 className="w-4 h-4 mr-2" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+};
 
 const nodeTypes: NodeTypes = {
   trigger: TriggerNode,
@@ -117,12 +281,40 @@ const initialEdges: Edge[] = [];
 const Automation = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const connectingNodeId = useRef<string | null>(null);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => {
+      const newEdge = {
+        ...params,
+        id: `edge-${params.source}-${params.target}`,
+        type: 'smoothstep',
+        animated: true,
+        style: { 
+          stroke: '#00FFFF', 
+          strokeWidth: 2,
+          filter: 'drop-shadow(0 0 4px rgba(0, 255, 255, 0.5))'
+        },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#00FFFF' },
+      };
+      
+      setEdges((eds) => addEdge(newEdge, eds));
+      setIsConnecting(false);
+      connectingNodeId.current = null;
+    },
     [setEdges],
   );
+
+  const onConnectStart = useCallback((event: any, { nodeId }: { nodeId: string | null }) => {
+    setIsConnecting(true);
+    connectingNodeId.current = nodeId;
+  }, []);
+
+  const onConnectEnd = useCallback(() => {
+    setIsConnecting(false);
+    connectingNodeId.current = null;
+  }, []);
 
   const toolCategories = [
     {
@@ -199,6 +391,13 @@ const Automation = () => {
           </div>
         </div>
 
+        {isConnecting && (
+          <div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+            <p className="text-sm text-cyan-400 font-medium">🔗 Connection Mode Active</p>
+            <p className="text-xs text-muted-foreground">Click on a connection point to complete the link</p>
+          </div>
+        )}
+
         <div className="space-y-6">
           {toolCategories.map((category) => (
             <div key={category.name}>
@@ -247,12 +446,19 @@ const Automation = () => {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onConnectStart={onConnectStart}
+          onConnectEnd={onConnectEnd}
           nodeTypes={nodeTypes}
           fitView
           className="bg-background"
           defaultEdgeOptions={{
             style: { stroke: '#00FFFF', strokeWidth: 2 },
             markerEnd: { type: MarkerType.ArrowClosed, color: '#00FFFF' },
+          }}
+          connectionLineStyle={{
+            stroke: '#00FFFF',
+            strokeWidth: 2,
+            strokeDasharray: '5,5',
           }}
         >
           <Controls className="bg-card border border-border" />
