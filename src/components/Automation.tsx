@@ -32,14 +32,16 @@ import {
 
 // Custom Node Components
 const TriggerNode = ({ data, id }: { data: any; id: string }) => {
-  const { deleteElements } = useReactFlow();
+  const { deleteElements, getEdges } = useReactFlow();
   
   const handleDelete = () => {
     deleteElements({ nodes: [{ id }] });
   };
 
   const handleDisconnect = () => {
-    deleteElements({ edges: data.connectedEdges || [] });
+    const edges = getEdges();
+    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
+    deleteElements({ edges: connectedEdges });
   };
 
   return (
@@ -79,14 +81,16 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
 };
 
 const ActionNode = ({ data, id }: { data: any; id: string }) => {
-  const { deleteElements } = useReactFlow();
+  const { deleteElements, getEdges } = useReactFlow();
   
   const handleDelete = () => {
     deleteElements({ nodes: [{ id }] });
   };
 
   const handleDisconnect = () => {
-    deleteElements({ edges: data.connectedEdges || [] });
+    const edges = getEdges();
+    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
+    deleteElements({ edges: connectedEdges });
   };
 
   return (
@@ -134,14 +138,16 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
 };
 
 const ConditionNode = ({ data, id }: { data: any; id: string }) => {
-  const { deleteElements } = useReactFlow();
+  const { deleteElements, getEdges } = useReactFlow();
   
   const handleDelete = () => {
     deleteElements({ nodes: [{ id }] });
   };
 
   const handleDisconnect = () => {
-    deleteElements({ edges: data.connectedEdges || [] });
+    const edges = getEdges();
+    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
+    deleteElements({ edges: connectedEdges });
   };
 
   return (
@@ -199,14 +205,16 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
 };
 
 const AINode = ({ data, id }: { data: any; id: string }) => {
-  const { deleteElements } = useReactFlow();
+  const { deleteElements, getEdges } = useReactFlow();
   
   const handleDelete = () => {
     deleteElements({ nodes: [{ id }] });
   };
 
   const handleDisconnect = () => {
-    deleteElements({ edges: data.connectedEdges || [] });
+    const edges = getEdges();
+    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
+    deleteElements({ edges: connectedEdges });
   };
 
   return (
