@@ -13,6 +13,8 @@ import {
   Node,
   NodeTypes,
   Position,
+  MarkerType,
+  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
@@ -250,7 +252,7 @@ const Automation = () => {
           className="bg-background"
           defaultEdgeOptions={{
             style: { stroke: '#00FFFF', strokeWidth: 2 },
-            markerEnd: { type: 'arrowclosed', color: '#00FFFF' },
+            markerEnd: { type: MarkerType.ArrowClosed, color: '#00FFFF' },
           }}
         >
           <Controls className="bg-card border border-border" />
@@ -259,7 +261,7 @@ const Automation = () => {
             nodeColor="#00FFFF"
             maskColor="rgba(0, 0, 0, 0.8)"
           />
-          <Background variant="dots" gap={20} size={1} color="#333" />
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#333" />
         </ReactFlow>
 
         {/* Floating Action Button */}
