@@ -42,10 +42,10 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
     const edges = getEdges();
     const connectedEdgeIds = edges
       .filter(edge => edge.source === id || edge.target === id)
-      .map(edge => edge.id);
+      .map(edge => ({ id: edge.id }));
     
     if (connectedEdgeIds.length > 0) {
-      deleteElements({ edges: connectedEdgeIds.map(edgeId => ({ id: edgeId })) });
+      deleteElements({ edges: connectedEdgeIds });
     }
   };
 
@@ -85,6 +85,13 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
             id="output-2"
             className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors"
             style={{ right: '-6px', top: '70%' }}
+          />
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output-3"
+            className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors"
+            style={{ right: '-6px', top: '50%' }}
           />
         </div>
       </ContextMenuTrigger>
@@ -126,10 +133,10 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
     const edges = getEdges();
     const connectedEdgeIds = edges
       .filter(edge => edge.source === id || edge.target === id)
-      .map(edge => edge.id);
+      .map(edge => ({ id: edge.id }));
     
     if (connectedEdgeIds.length > 0) {
-      deleteElements({ edges: connectedEdgeIds.map(edgeId => ({ id: edgeId })) });
+      deleteElements({ edges: connectedEdgeIds });
     }
   };
 
@@ -168,6 +175,13 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
             className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
             style={{ left: '-6px', top: '70%' }}
           />
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input-3"
+            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
+            style={{ left: '-6px', top: '50%' }}
+          />
           
           <Handle
             type="source"
@@ -182,6 +196,13 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
             id="output-2"
             className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
             style={{ right: '-6px', top: '70%' }}
+          />
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output-3"
+            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
+            style={{ right: '-6px', top: '50%' }}
           />
         </div>
       </ContextMenuTrigger>
@@ -227,10 +248,10 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
     const edges = getEdges();
     const connectedEdgeIds = edges
       .filter(edge => edge.source === id || edge.target === id)
-      .map(edge => edge.id);
+      .map(edge => ({ id: edge.id }));
     
     if (connectedEdgeIds.length > 0) {
-      deleteElements({ edges: connectedEdgeIds.map(edgeId => ({ id: edgeId })) });
+      deleteElements({ edges: connectedEdgeIds });
     }
   };
 
@@ -264,6 +285,13 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
             className="w-3 h-3 bg-yellow-500 border-2 border-yellow-300 hover:bg-yellow-400 transition-colors transform -rotate-45"
             style={{ left: '-6px', top: '50%', transform: 'translateY(-50%) rotate(-45deg)' }}
           />
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input-2"
+            className="w-3 h-3 bg-yellow-500 border-2 border-yellow-300 hover:bg-yellow-400 transition-colors transform -rotate-45"
+            style={{ left: '-6px', top: '30%', transform: 'translateY(-50%) rotate(-45deg)' }}
+          />
           
           {/* Output Handles for Yes/No */}
           <Handle
@@ -279,6 +307,13 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
             position={Position.Bottom}
             className="w-3 h-3 bg-red-500 border-2 border-red-300 hover:bg-red-400 transition-colors transform -rotate-45"
             style={{ bottom: '-6px', right: '30%', transform: 'translateX(50%) rotate(-45deg)' }}
+          />
+          <Handle
+            id="maybe"
+            type="source"
+            position={Position.Right}
+            className="w-3 h-3 bg-orange-500 border-2 border-orange-300 hover:bg-orange-400 transition-colors transform -rotate-45"
+            style={{ right: '-6px', top: '50%', transform: 'translateY(-50%) rotate(-45deg)' }}
           />
         </div>
       </ContextMenuTrigger>
@@ -320,10 +355,10 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
     const edges = getEdges();
     const connectedEdgeIds = edges
       .filter(edge => edge.source === id || edge.target === id)
-      .map(edge => edge.id);
+      .map(edge => ({ id: edge.id }));
     
     if (connectedEdgeIds.length > 0) {
-      deleteElements({ edges: connectedEdgeIds.map(edgeId => ({ id: edgeId })) });
+      deleteElements({ edges: connectedEdgeIds });
     }
   };
 
@@ -365,6 +400,13 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
             className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
             style={{ left: '-6px', top: '70%' }}
           />
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input-3"
+            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
+            style={{ left: '-6px', top: '50%' }}
+          />
           
           <Handle
             type="source"
@@ -379,6 +421,13 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
             id="output-2"
             className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
             style={{ right: '-6px', top: '70%' }}
+          />
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output-3"
+            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
+            style={{ right: '-6px', top: '50%' }}
           />
         </div>
       </ContextMenuTrigger>
@@ -500,7 +549,6 @@ const Automation = () => {
     connectingNodeId.current = null;
   }, [pendingConnection, onConnect]);
 
-  // ... keep existing code (toolCategories array)
   const toolCategories = [
     {
       name: 'Triggers',
