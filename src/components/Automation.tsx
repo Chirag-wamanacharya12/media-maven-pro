@@ -21,7 +21,7 @@ import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Play, Save, Settings, MessageSquare, Users, Share2, Bot, Timer, Filter, Trash2, Unlink } from 'lucide-react';
+import { Plus, Play, Save, Settings, MessageSquare, Users, Share2, Bot, Timer, Filter, Trash2, Unlink, Copy, Edit3, Zap, Palette } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -49,6 +49,16 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
     }
   };
 
+  const handleDuplicate = () => {
+    // Will be implemented by parent component
+    console.log('Duplicate node:', id);
+  };
+
+  const handleEdit = () => {
+    // Will be implemented by parent component
+    console.log('Edit node:', id);
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger>
@@ -61,21 +71,41 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
           </div>
           <p className="text-xs text-muted-foreground">{data.description}</p>
           
-          {/* Output Handle */}
+          {/* Multiple Output Handles */}
           <Handle
             type="source"
             position={Position.Right}
+            id="output-1"
             className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors"
-            style={{ right: '-6px' }}
+            style={{ right: '-6px', top: '30%' }}
+          />
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output-2"
+            className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors"
+            style={{ right: '-6px', top: '70%' }}
           />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
-          <Unlink className="w-4 h-4 mr-2" />
-          Disconnect
+        <ContextMenuItem onClick={handleEdit} className="text-blue-600">
+          <Edit3 className="w-4 h-4 mr-2" />
+          Edit Properties
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleDuplicate} className="text-green-600">
+          <Copy className="w-4 h-4 mr-2" />
+          Duplicate
+        </ContextMenuItem>
+        <ContextMenuItem className="text-purple-600">
+          <Palette className="w-4 h-4 mr-2" />
+          Change Color
         </ContextMenuItem>
         <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+          <Unlink className="w-4 h-4 mr-2" />
+          Disconnect All
+        </ContextMenuItem>
         <ContextMenuItem onClick={handleDelete} className="text-red-600">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
@@ -103,6 +133,14 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
     }
   };
 
+  const handleDuplicate = () => {
+    console.log('Duplicate node:', id);
+  };
+
+  const handleEdit = () => {
+    console.log('Edit node:', id);
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger>
@@ -115,29 +153,60 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
           </div>
           <p className="text-xs text-muted-foreground">{data.description}</p>
           
-          {/* Input Handle */}
+          {/* Multiple Input/Output Handles */}
           <Handle
             type="target"
             position={Position.Left}
+            id="input-1"
             className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
-            style={{ left: '-6px' }}
+            style={{ left: '-6px', top: '30%' }}
+          />
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input-2"
+            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
+            style={{ left: '-6px', top: '70%' }}
           />
           
-          {/* Output Handle */}
           <Handle
             type="source"
             position={Position.Right}
+            id="output-1"
             className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
-            style={{ right: '-6px' }}
+            style={{ right: '-6px', top: '30%' }}
+          />
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output-2"
+            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
+            style={{ right: '-6px', top: '70%' }}
           />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
-          <Unlink className="w-4 h-4 mr-2" />
-          Disconnect
+        <ContextMenuItem onClick={handleEdit} className="text-blue-600">
+          <Edit3 className="w-4 h-4 mr-2" />
+          Edit Properties
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleDuplicate} className="text-green-600">
+          <Copy className="w-4 h-4 mr-2" />
+          Duplicate
+        </ContextMenuItem>
+        <ContextMenuItem className="text-purple-600">
+          <Palette className="w-4 h-4 mr-2" />
+          Change Color
+        </ContextMenuItem>
+        <ContextMenuItem className="text-cyan-600">
+          <Zap className="w-4 h-4 mr-2" />
+          Test Action
         </ContextMenuItem>
         <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+          <Unlink className="w-4 h-4 mr-2" />
+          Disconnect All
+        </ContextMenuItem>
         <ContextMenuItem onClick={handleDelete} className="text-red-600">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
@@ -165,6 +234,14 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
     }
   };
 
+  const handleDuplicate = () => {
+    console.log('Duplicate node:', id);
+  };
+
+  const handleEdit = () => {
+    console.log('Edit node:', id);
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger>
@@ -183,6 +260,7 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
           <Handle
             type="target"
             position={Position.Left}
+            id="input"
             className="w-3 h-3 bg-yellow-500 border-2 border-yellow-300 hover:bg-yellow-400 transition-colors transform -rotate-45"
             style={{ left: '-6px', top: '50%', transform: 'translateY(-50%) rotate(-45deg)' }}
           />
@@ -205,11 +283,23 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
-          <Unlink className="w-4 h-4 mr-2" />
-          Disconnect
+        <ContextMenuItem onClick={handleEdit} className="text-blue-600">
+          <Edit3 className="w-4 h-4 mr-2" />
+          Edit Condition
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleDuplicate} className="text-green-600">
+          <Copy className="w-4 h-4 mr-2" />
+          Duplicate
+        </ContextMenuItem>
+        <ContextMenuItem className="text-purple-600">
+          <Palette className="w-4 h-4 mr-2" />
+          Change Color
         </ContextMenuItem>
         <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+          <Unlink className="w-4 h-4 mr-2" />
+          Disconnect All
+        </ContextMenuItem>
         <ContextMenuItem onClick={handleDelete} className="text-red-600">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
@@ -237,6 +327,14 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
     }
   };
 
+  const handleDuplicate = () => {
+    console.log('Duplicate node:', id);
+  };
+
+  const handleEdit = () => {
+    console.log('Edit node:', id);
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger>
@@ -252,29 +350,60 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
             {data.aiModel}
           </Badge>
           
-          {/* Input Handle */}
+          {/* Multiple Input/Output Handles */}
           <Handle
             type="target"
             position={Position.Left}
+            id="input-1"
             className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
-            style={{ left: '-6px' }}
+            style={{ left: '-6px', top: '30%' }}
+          />
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input-2"
+            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
+            style={{ left: '-6px', top: '70%' }}
           />
           
-          {/* Output Handle */}
           <Handle
             type="source"
             position={Position.Right}
+            id="output-1"
             className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
-            style={{ right: '-6px' }}
+            style={{ right: '-6px', top: '30%' }}
+          />
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output-2"
+            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
+            style={{ right: '-6px', top: '70%' }}
           />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
-          <Unlink className="w-4 h-4 mr-2" />
-          Disconnect
+        <ContextMenuItem onClick={handleEdit} className="text-blue-600">
+          <Edit3 className="w-4 h-4 mr-2" />
+          Edit AI Prompt
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleDuplicate} className="text-green-600">
+          <Copy className="w-4 h-4 mr-2" />
+          Duplicate
+        </ContextMenuItem>
+        <ContextMenuItem className="text-purple-600">
+          <Palette className="w-4 h-4 mr-2" />
+          Change Color
+        </ContextMenuItem>
+        <ContextMenuItem className="text-cyan-600">
+          <Zap className="w-4 h-4 mr-2" />
+          Test AI Response
         </ContextMenuItem>
         <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+          <Unlink className="w-4 h-4 mr-2" />
+          Disconnect All
+        </ContextMenuItem>
         <ContextMenuItem onClick={handleDelete} className="text-red-600">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
@@ -310,76 +439,103 @@ const Automation = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [pendingConnection, setPendingConnection] = useState<{sourceNode: string, sourceHandle: string} | null>(null);
   const connectingNodeId = useRef<string | null>(null);
 
   const onConnect = useCallback(
     (params: Connection) => {
       const newEdge = {
         ...params,
-        id: `edge-${params.source}-${params.target}`,
+        id: `edge-${params.source}-${params.target}-${Date.now()}`,
         type: 'smoothstep',
-        animated: true,
+        animated: false, // Solid line when connection is complete
         style: { 
           stroke: '#00FFFF', 
-          strokeWidth: 2,
-          filter: 'drop-shadow(0 0 4px rgba(0, 255, 255, 0.5))'
+          strokeWidth: 3,
+          filter: 'drop-shadow(0 0 6px rgba(0, 255, 255, 0.6))'
         },
         markerEnd: { type: MarkerType.ArrowClosed, color: '#00FFFF' },
       };
       
       setEdges((eds) => addEdge(newEdge, eds));
       setIsConnecting(false);
+      setPendingConnection(null);
       connectingNodeId.current = null;
     },
     [setEdges],
   );
 
-  const onConnectStart = useCallback((event: any, { nodeId }: { nodeId: string | null }) => {
+  const onConnectStart = useCallback((event: any, { nodeId, handleId }: { nodeId: string | null, handleId: string | null }) => {
     setIsConnecting(true);
     connectingNodeId.current = nodeId;
+    if (nodeId && handleId) {
+      setPendingConnection({ sourceNode: nodeId, sourceHandle: handleId });
+    }
   }, []);
 
-  const onConnectEnd = useCallback(() => {
+  const onConnectEnd = useCallback((event: any) => {
+    // Check if we're over a valid target handle
+    const targetElement = document.elementFromPoint(event.clientX, event.clientY);
+    const targetHandle = targetElement?.closest('.react-flow__handle-target');
+    
+    if (targetHandle && pendingConnection) {
+      const targetNodeId = targetHandle.getAttribute('data-nodeid');
+      const targetHandleId = targetHandle.getAttribute('data-handleid');
+      
+      if (targetNodeId && targetNodeId !== pendingConnection.sourceNode) {
+        // Auto-connect when hovering over a valid target
+        const connection: Connection = {
+          source: pendingConnection.sourceNode,
+          target: targetNodeId,
+          sourceHandle: pendingConnection.sourceHandle,
+          targetHandle: targetHandleId
+        };
+        onConnect(connection);
+        return;
+      }
+    }
+    
     setIsConnecting(false);
+    setPendingConnection(null);
     connectingNodeId.current = null;
-  }, []);
+  }, [pendingConnection, onConnect]);
 
   // ... keep existing code (toolCategories array)
   const toolCategories = [
     {
       name: 'Triggers',
       items: [
-        { id: 'new-dm', label: 'New DM', icon: MessageSquare, description: 'When someone sends a DM' },
-        { id: 'new-comment', label: 'New Comment', icon: MessageSquare, description: 'When someone comments on your post' },
-        { id: 'new-follower', label: 'New Follower', icon: Users, description: 'When you get a new follower' },
-        { id: 'keyword-mention', label: 'Keyword Mention', icon: Filter, description: 'When specific keywords are mentioned' },
-        { id: 'scheduled-time', label: 'Scheduled Time', icon: Timer, description: 'At specific times/dates' },
+        { id: 'new-dm', label: 'New DM', icon: MessageSquare, description: 'When someone sends a DM', color: 'green' },
+        { id: 'new-comment', label: 'New Comment', icon: MessageSquare, description: 'When someone comments on your post', color: 'green' },
+        { id: 'new-follower', label: 'New Follower', icon: Users, description: 'When you get a new follower', color: 'green' },
+        { id: 'keyword-mention', label: 'Keyword Mention', icon: Filter, description: 'When specific keywords are mentioned', color: 'green' },
+        { id: 'scheduled-time', label: 'Scheduled Time', icon: Timer, description: 'At specific times/dates', color: 'green' },
       ]
     },
     {
       name: 'Social Media Actions',
       items: [
-        { id: 'send-dm', label: 'Send DM', icon: MessageSquare, description: 'Send a direct message' },
-        { id: 'post-content', label: 'Post Content', icon: Share2, description: 'Publish content to platforms' },
-        { id: 'reply-comment', label: 'Reply to Comment', icon: MessageSquare, description: 'Respond to comments' },
-        { id: 'follow-user', label: 'Follow User', icon: Users, description: 'Follow a user account' },
+        { id: 'send-dm', label: 'Send DM', icon: MessageSquare, description: 'Send a direct message', color: 'blue' },
+        { id: 'post-content', label: 'Post Content', icon: Share2, description: 'Publish content to platforms', color: 'blue' },
+        { id: 'reply-comment', label: 'Reply to Comment', icon: MessageSquare, description: 'Respond to comments', color: 'blue' },
+        { id: 'follow-user', label: 'Follow User', icon: Users, description: 'Follow a user account', color: 'blue' },
       ]
     },
     {
       name: 'AI Models',
       items: [
-        { id: 'gpt-4', label: 'GPT-4', icon: Bot, description: 'Generate intelligent responses', aiModel: 'GPT-4' },
-        { id: 'claude', label: 'Claude', icon: Bot, description: 'Anthropic Claude for analysis', aiModel: 'Claude' },
-        { id: 'gemini', label: 'Gemini', icon: Bot, description: 'Google Gemini for creativity', aiModel: 'Gemini' },
-        { id: 'sentiment-ai', label: 'Sentiment Analysis', icon: Bot, description: 'Analyze message sentiment', aiModel: 'Custom' },
+        { id: 'gpt-4', label: 'GPT-4', icon: Bot, description: 'Generate intelligent responses', aiModel: 'GPT-4', color: 'purple' },
+        { id: 'claude', label: 'Claude', icon: Bot, description: 'Anthropic Claude for analysis', aiModel: 'Claude', color: 'purple' },
+        { id: 'gemini', label: 'Gemini', icon: Bot, description: 'Google Gemini for creativity', aiModel: 'Gemini', color: 'purple' },
+        { id: 'sentiment-ai', label: 'Sentiment Analysis', icon: Bot, description: 'Analyze message sentiment', aiModel: 'Custom', color: 'purple' },
       ]
     },
     {
       name: 'Conditions',
       items: [
-        { id: 'if-contains', label: 'If Contains', icon: Filter, description: 'Check if text contains keywords' },
-        { id: 'if-sentiment', label: 'If Sentiment', icon: Filter, description: 'Check message sentiment' },
-        { id: 'if-follower-count', label: 'If Follower Count', icon: Filter, description: 'Check follower count' },
+        { id: 'if-contains', label: 'If Contains', icon: Filter, description: 'Check if text contains keywords', color: 'yellow' },
+        { id: 'if-sentiment', label: 'If Sentiment', icon: Filter, description: 'Check message sentiment', color: 'yellow' },
+        { id: 'if-follower-count', label: 'If Follower Count', icon: Filter, description: 'Check follower count', color: 'yellow' },
       ]
     }
   ];
@@ -403,72 +559,88 @@ const Automation = () => {
   };
 
   return (
-    <div className="h-full flex animate-fade-in">
-      {/* Left Panel - Tools */}
-      <div className="w-80 bg-card border-r border-border p-4 overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Automation Builder</h2>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline">
-              <Save className="w-4 h-4 mr-2" />
-              Save
-            </Button>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700">
-              <Play className="w-4 h-4 mr-2" />
-              Test
-            </Button>
+    <div className="h-full flex animate-fade-in overflow-hidden">
+      {/* Left Panel - Tools with scroll */}
+      <div className="w-80 bg-card border-r border-border flex flex-col overflow-hidden">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Automation Builder</h2>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline">
+                <Save className="w-4 h-4 mr-2" />
+                Save
+              </Button>
+              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Play className="w-4 h-4 mr-2" />
+                Test
+              </Button>
+            </div>
           </div>
+
+          {isConnecting && (
+            <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+              <p className="text-sm text-cyan-400 font-medium">🔗 Connection Mode Active</p>
+              <p className="text-xs text-muted-foreground">Hover over a connection point to auto-connect</p>
+            </div>
+          )}
         </div>
 
-        {isConnecting && (
-          <div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
-            <p className="text-sm text-cyan-400 font-medium">🔗 Connection Mode Active</p>
-            <p className="text-xs text-muted-foreground">Click on a connection point to complete the link</p>
-          </div>
-        )}
-
-        <div className="space-y-6">
-          {toolCategories.map((category) => (
-            <div key={category.name}>
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                {category.name}
-              </h3>
-              <div className="space-y-2">
-                {category.items.map((tool) => (
-                  <Card 
-                    key={tool.id}
-                    className="p-3 cursor-pointer hover:bg-accent/50 transition-colors border-border/50"
-                    onClick={() => addNode(tool)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
-                        <tool.icon className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm">{tool.label}</p>
-                          {tool.aiModel && (
-                            <Badge variant="secondary" className="text-xs">
-                              {tool.aiModel}
-                            </Badge>
-                          )}
+        <div className="flex-1 p-4 overflow-y-auto scroll-hidden">
+          <div className="space-y-6">
+            {toolCategories.map((category) => (
+              <div key={category.name}>
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                  {category.name}
+                </h3>
+                <div className="space-y-2">
+                  {category.items.map((tool) => (
+                    <Card 
+                      key={tool.id}
+                      className="p-3 cursor-pointer hover:bg-accent/50 transition-colors border-border/50"
+                      onClick={() => addNode(tool)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          tool.color === 'green' ? 'bg-green-500/20' :
+                          tool.color === 'blue' ? 'bg-blue-500/20' :
+                          tool.color === 'purple' ? 'bg-purple-500/20' :
+                          tool.color === 'yellow' ? 'bg-yellow-500/20' :
+                          'bg-primary/20'
+                        }`}>
+                          <tool.icon className={`w-4 h-4 ${
+                            tool.color === 'green' ? 'text-green-500' :
+                            tool.color === 'blue' ? 'text-blue-500' :
+                            tool.color === 'purple' ? 'text-purple-500' :
+                            tool.color === 'yellow' ? 'text-yellow-500' :
+                            'text-primary'
+                          }`} />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {tool.description}
-                        </p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">{tool.label}</p>
+                            {tool.aiModel && (
+                              <Badge variant="secondary" className="text-xs">
+                                {tool.aiModel}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {tool.description}
+                          </p>
+                        </div>
+                        <Plus className="w-4 h-4 text-muted-foreground" />
                       </div>
-                      <Plus className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Main Canvas */}
-      <div className="flex-1 relative">
+      {/* Main Canvas - No scroll */}
+      <div className="flex-1 relative overflow-hidden">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -485,15 +657,24 @@ const Automation = () => {
             markerEnd: { type: MarkerType.ArrowClosed, color: '#00FFFF' },
           }}
           connectionLineStyle={{
-            stroke: '#00FFFF',
-            strokeWidth: 2,
-            strokeDasharray: '5,5',
+            stroke: '#FF6B6B',
+            strokeWidth: 3,
+            strokeDasharray: '8,4',
+            filter: 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.8))'
           }}
         >
           <Controls className="bg-card border border-border" />
           <MiniMap 
             className="bg-card border border-border" 
-            nodeColor="#00FFFF"
+            nodeColor={(node) => {
+              switch(node.type) {
+                case 'trigger': return '#22c55e';
+                case 'action': return '#3b82f6';
+                case 'condition': return '#eab308';
+                case 'ai': return '#8b5cf6';
+                default: return '#00FFFF';
+              }
+            }}
             maskColor="rgba(0, 0, 0, 0.8)"
           />
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#333" />
