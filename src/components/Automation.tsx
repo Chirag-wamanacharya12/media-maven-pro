@@ -40,80 +40,74 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
 
   const handleDisconnect = () => {
     const edges = getEdges();
-    const connectedEdgeIds = edges
-      .filter(edge => edge.source === id || edge.target === id)
-      .map(edge => ({ id: edge.id }));
+    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
     
-    if (connectedEdgeIds.length > 0) {
-      deleteElements({ edges: connectedEdgeIds });
+    if (connectedEdges.length > 0) {
+      deleteElements({ edges: connectedEdges.map(edge => ({ id: edge.id })) });
     }
   };
 
   const handleDuplicate = () => {
-    // Will be implemented by parent component
     console.log('Duplicate node:', id);
   };
 
   const handleEdit = () => {
-    // Will be implemented by parent component
     console.log('Edit node:', id);
   };
+
+  // Get connected edges to determine how many dots to show
+  const edges = useReactFlow().getEdges();
+  const connectedOutputs = edges.filter(edge => edge.source === id);
+  const maxOutputs = Math.max(3, connectedOutputs.length + 1);
 
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <div className="bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/50 rounded-lg p-4 min-w-[200px] relative cursor-pointer hover:border-green-400 transition-colors">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <data.icon className="w-4 h-4 text-white" />
+        <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/20 border-2 border-emerald-500/30 rounded-xl p-4 min-w-[220px] relative cursor-pointer hover:border-emerald-400/50 transition-all duration-200 shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
+              <data.icon className="w-5 h-5 text-white" />
             </div>
-            <span className="font-semibold text-green-400">{data.label}</span>
+            <span className="font-semibold text-emerald-300 text-sm">{data.label}</span>
           </div>
-          <p className="text-xs text-muted-foreground">{data.description}</p>
+          <p className="text-xs text-slate-400 leading-relaxed">{data.description}</p>
           
-          {/* Multiple Output Handles */}
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output-1"
-            className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors"
-            style={{ right: '-6px', top: '30%' }}
-          />
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output-2"
-            className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors"
-            style={{ right: '-6px', top: '70%' }}
-          />
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output-3"
-            className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors"
-            style={{ right: '-6px', top: '50%' }}
-          />
+          {/* Dynamic Output Handles */}
+          {Array.from({ length: maxOutputs }, (_, index) => (
+            <Handle
+              key={`output-${index + 1}`}
+              type="source"
+              position={Position.Right}
+              id={`output-${index + 1}`}
+              className="w-3 h-3 bg-emerald-500 border-2 border-emerald-300 hover:bg-emerald-400 transition-all duration-200 hover:scale-110"
+              style={{ 
+                right: '-6px', 
+                top: `${30 + (index * 15)}%`,
+                opacity: index < connectedOutputs.length + 1 ? 1 : 0.3
+              }}
+            />
+          ))}
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={handleEdit} className="text-blue-600">
+      <ContextMenuContent className="w-48 bg-slate-900/95 border-slate-700 backdrop-blur-sm">
+        <ContextMenuItem onClick={handleEdit} className="text-blue-400 hover:bg-blue-500/20">
           <Edit3 className="w-4 h-4 mr-2" />
           Edit Properties
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleDuplicate} className="text-green-600">
+        <ContextMenuItem onClick={handleDuplicate} className="text-emerald-400 hover:bg-emerald-500/20">
           <Copy className="w-4 h-4 mr-2" />
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem className="text-purple-600">
+        <ContextMenuItem className="text-purple-400 hover:bg-purple-500/20">
           <Palette className="w-4 h-4 mr-2" />
           Change Color
         </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+        <ContextMenuSeparator className="bg-slate-700" />
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-400 hover:bg-orange-500/20">
           <Unlink className="w-4 h-4 mr-2" />
           Disconnect All
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleDelete} className="text-red-600">
+        <ContextMenuItem onClick={handleDelete} className="text-red-400 hover:bg-red-500/20">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
         </ContextMenuItem>
@@ -131,12 +125,10 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
 
   const handleDisconnect = () => {
     const edges = getEdges();
-    const connectedEdgeIds = edges
-      .filter(edge => edge.source === id || edge.target === id)
-      .map(edge => ({ id: edge.id }));
+    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
     
-    if (connectedEdgeIds.length > 0) {
-      deleteElements({ edges: connectedEdgeIds });
+    if (connectedEdges.length > 0) {
+      deleteElements({ edges: connectedEdges.map(edge => ({ id: edge.id })) });
     }
   };
 
@@ -148,87 +140,81 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
     console.log('Edit node:', id);
   };
 
+  // Dynamic handle management
+  const edges = useReactFlow().getEdges();
+  const connectedInputs = edges.filter(edge => edge.target === id);
+  const connectedOutputs = edges.filter(edge => edge.source === id);
+  const maxInputs = Math.max(3, connectedInputs.length + 1);
+  const maxOutputs = Math.max(3, connectedOutputs.length + 1);
+
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <div className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/50 rounded-lg p-4 min-w-[200px] relative cursor-pointer hover:border-blue-400 transition-colors">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <data.icon className="w-4 h-4 text-white" />
+        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/20 border-2 border-blue-500/30 rounded-xl p-4 min-w-[220px] relative cursor-pointer hover:border-blue-400/50 transition-all duration-200 shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+              <data.icon className="w-5 h-5 text-white" />
             </div>
-            <span className="font-semibold text-blue-400">{data.label}</span>
+            <span className="font-semibold text-blue-300 text-sm">{data.label}</span>
           </div>
-          <p className="text-xs text-muted-foreground">{data.description}</p>
+          <p className="text-xs text-slate-400 leading-relaxed">{data.description}</p>
           
-          {/* Multiple Input/Output Handles */}
-          <Handle
-            type="target"
-            position={Position.Left}
-            id="input-1"
-            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
-            style={{ left: '-6px', top: '30%' }}
-          />
-          <Handle
-            type="target"
-            position={Position.Left}
-            id="input-2"
-            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
-            style={{ left: '-6px', top: '70%' }}
-          />
-          <Handle
-            type="target"
-            position={Position.Left}
-            id="input-3"
-            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
-            style={{ left: '-6px', top: '50%' }}
-          />
+          {/* Dynamic Input Handles */}
+          {Array.from({ length: maxInputs }, (_, index) => (
+            <Handle
+              key={`input-${index + 1}`}
+              type="target"
+              position={Position.Left}
+              id={`input-${index + 1}`}
+              className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-all duration-200 hover:scale-110"
+              style={{ 
+                left: '-6px', 
+                top: `${30 + (index * 15)}%`,
+                opacity: index < connectedInputs.length + 1 ? 1 : 0.3
+              }}
+            />
+          ))}
           
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output-1"
-            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
-            style={{ right: '-6px', top: '30%' }}
-          />
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output-2"
-            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
-            style={{ right: '-6px', top: '70%' }}
-          />
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output-3"
-            className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-colors"
-            style={{ right: '-6px', top: '50%' }}
-          />
+          {/* Dynamic Output Handles */}
+          {Array.from({ length: maxOutputs }, (_, index) => (
+            <Handle
+              key={`output-${index + 1}`}
+              type="source"
+              position={Position.Right}
+              id={`output-${index + 1}`}
+              className="w-3 h-3 bg-blue-500 border-2 border-blue-300 hover:bg-blue-400 transition-all duration-200 hover:scale-110"
+              style={{ 
+                right: '-6px', 
+                top: `${30 + (index * 15)}%`,
+                opacity: index < connectedOutputs.length + 1 ? 1 : 0.3
+              }}
+            />
+          ))}
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={handleEdit} className="text-blue-600">
+      <ContextMenuContent className="w-48 bg-slate-900/95 border-slate-700 backdrop-blur-sm">
+        <ContextMenuItem onClick={handleEdit} className="text-blue-400 hover:bg-blue-500/20">
           <Edit3 className="w-4 h-4 mr-2" />
           Edit Properties
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleDuplicate} className="text-green-600">
+        <ContextMenuItem onClick={handleDuplicate} className="text-emerald-400 hover:bg-emerald-500/20">
           <Copy className="w-4 h-4 mr-2" />
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem className="text-purple-600">
+        <ContextMenuItem className="text-purple-400 hover:bg-purple-500/20">
           <Palette className="w-4 h-4 mr-2" />
           Change Color
         </ContextMenuItem>
-        <ContextMenuItem className="text-cyan-600">
+        <ContextMenuItem className="text-cyan-400 hover:bg-cyan-500/20">
           <Zap className="w-4 h-4 mr-2" />
           Test Action
         </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+        <ContextMenuSeparator className="bg-slate-700" />
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-400 hover:bg-orange-500/20">
           <Unlink className="w-4 h-4 mr-2" />
           Disconnect All
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleDelete} className="text-red-600">
+        <ContextMenuItem onClick={handleDelete} className="text-red-400 hover:bg-red-500/20">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
         </ContextMenuItem>
@@ -246,12 +232,10 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
 
   const handleDisconnect = () => {
     const edges = getEdges();
-    const connectedEdgeIds = edges
-      .filter(edge => edge.source === id || edge.target === id)
-      .map(edge => ({ id: edge.id }));
+    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
     
-    if (connectedEdgeIds.length > 0) {
-      deleteElements({ edges: connectedEdgeIds });
+    if (connectedEdges.length > 0) {
+      deleteElements({ edges: connectedEdges.map(edge => ({ id: edge.id })) });
     }
   };
 
@@ -263,79 +247,85 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
     console.log('Edit node:', id);
   };
 
+  // Dynamic handle management
+  const edges = useReactFlow().getEdges();
+  const connectedInputs = edges.filter(edge => edge.target === id);
+  const maxInputs = Math.max(2, connectedInputs.length + 1);
+
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <div className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/50 rounded-lg p-4 min-w-[200px] relative cursor-pointer hover:border-yellow-400 transition-colors transform rotate-45" style={{ borderRadius: '20px' }}>
+        <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/20 border-2 border-amber-500/30 rounded-2xl p-4 min-w-[200px] relative cursor-pointer hover:border-amber-400/50 transition-all duration-200 shadow-lg backdrop-blur-sm transform rotate-45" style={{ borderRadius: '24px' }}>
           <div className="transform -rotate-45">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                <data.icon className="w-4 h-4 text-white" />
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md">
+                <data.icon className="w-5 h-5 text-white" />
               </div>
-              <span className="font-semibold text-yellow-400">{data.label}</span>
+              <span className="font-semibold text-amber-300 text-sm">{data.label}</span>
             </div>
-            <p className="text-xs text-muted-foreground">{data.description}</p>
+            <p className="text-xs text-slate-400 leading-relaxed">{data.description}</p>
           </div>
           
-          {/* Input Handle */}
-          <Handle
-            type="target"
-            position={Position.Left}
-            id="input"
-            className="w-3 h-3 bg-yellow-500 border-2 border-yellow-300 hover:bg-yellow-400 transition-colors transform -rotate-45"
-            style={{ left: '-6px', top: '50%', transform: 'translateY(-50%) rotate(-45deg)' }}
-          />
-          <Handle
-            type="target"
-            position={Position.Left}
-            id="input-2"
-            className="w-3 h-3 bg-yellow-500 border-2 border-yellow-300 hover:bg-yellow-400 transition-colors transform -rotate-45"
-            style={{ left: '-6px', top: '30%', transform: 'translateY(-50%) rotate(-45deg)' }}
-          />
+          {/* Dynamic Input Handles */}
+          {Array.from({ length: maxInputs }, (_, index) => (
+            <Handle
+              key={`input-${index + 1}`}
+              type="target"
+              position={Position.Left}
+              id={`input-${index + 1}`}
+              className="w-3 h-3 bg-amber-500 border-2 border-amber-300 hover:bg-amber-400 transition-all duration-200 hover:scale-110 transform -rotate-45"
+              style={{ 
+                left: '-6px', 
+                top: `${40 + (index * 20)}%`, 
+                transform: 'translateY(-50%) rotate(-45deg)',
+                opacity: index < connectedInputs.length + 1 ? 1 : 0.3
+              }}
+            />
+          ))}
           
-          {/* Output Handles for Yes/No */}
+          {/* Output Handles for Yes/No/Maybe */}
           <Handle
             id="yes"
             type="source"
             position={Position.Top}
-            className="w-3 h-3 bg-green-500 border-2 border-green-300 hover:bg-green-400 transition-colors transform -rotate-45"
+            className="w-3 h-3 bg-emerald-500 border-2 border-emerald-300 hover:bg-emerald-400 transition-all duration-200 hover:scale-110 transform -rotate-45"
             style={{ top: '-6px', left: '30%', transform: 'translateX(-50%) rotate(-45deg)' }}
           />
           <Handle
             id="no"
             type="source"
             position={Position.Bottom}
-            className="w-3 h-3 bg-red-500 border-2 border-red-300 hover:bg-red-400 transition-colors transform -rotate-45"
+            className="w-3 h-3 bg-red-500 border-2 border-red-300 hover:bg-red-400 transition-all duration-200 hover:scale-110 transform -rotate-45"
             style={{ bottom: '-6px', right: '30%', transform: 'translateX(50%) rotate(-45deg)' }}
           />
           <Handle
             id="maybe"
             type="source"
             position={Position.Right}
-            className="w-3 h-3 bg-orange-500 border-2 border-orange-300 hover:bg-orange-400 transition-colors transform -rotate-45"
+            className="w-3 h-3 bg-orange-500 border-2 border-orange-300 hover:bg-orange-400 transition-all duration-200 hover:scale-110 transform -rotate-45"
             style={{ right: '-6px', top: '50%', transform: 'translateY(-50%) rotate(-45deg)' }}
           />
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={handleEdit} className="text-blue-600">
+      <ContextMenuContent className="w-48 bg-slate-900/95 border-slate-700 backdrop-blur-sm">
+        <ContextMenuItem onClick={handleEdit} className="text-blue-400 hover:bg-blue-500/20">
           <Edit3 className="w-4 h-4 mr-2" />
           Edit Condition
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleDuplicate} className="text-green-600">
+        <ContextMenuItem onClick={handleDuplicate} className="text-emerald-400 hover:bg-emerald-500/20">
           <Copy className="w-4 h-4 mr-2" />
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem className="text-purple-600">
+        <ContextMenuItem className="text-purple-400 hover:bg-purple-500/20">
           <Palette className="w-4 h-4 mr-2" />
           Change Color
         </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+        <ContextMenuSeparator className="bg-slate-700" />
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-400 hover:bg-orange-500/20">
           <Unlink className="w-4 h-4 mr-2" />
           Disconnect All
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleDelete} className="text-red-600">
+        <ContextMenuItem onClick={handleDelete} className="text-red-400 hover:bg-red-500/20">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
         </ContextMenuItem>
@@ -353,12 +343,10 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
 
   const handleDisconnect = () => {
     const edges = getEdges();
-    const connectedEdgeIds = edges
-      .filter(edge => edge.source === id || edge.target === id)
-      .map(edge => ({ id: edge.id }));
+    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
     
-    if (connectedEdgeIds.length > 0) {
-      deleteElements({ edges: connectedEdgeIds });
+    if (connectedEdges.length > 0) {
+      deleteElements({ edges: connectedEdges.map(edge => ({ id: edge.id })) });
     }
   };
 
@@ -370,90 +358,84 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
     console.log('Edit node:', id);
   };
 
+  // Dynamic handle management
+  const edges = useReactFlow().getEdges();
+  const connectedInputs = edges.filter(edge => edge.target === id);
+  const connectedOutputs = edges.filter(edge => edge.source === id);
+  const maxInputs = Math.max(3, connectedInputs.length + 1);
+  const maxOutputs = Math.max(3, connectedOutputs.length + 1);
+
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <div className="bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/50 rounded-lg p-4 min-w-[200px] relative cursor-pointer hover:border-purple-400 transition-colors">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-              <Bot className="w-4 h-4 text-white" />
+        <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/20 border-2 border-purple-500/30 rounded-xl p-4 min-w-[220px] relative cursor-pointer hover:border-purple-400/50 transition-all duration-200 shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md">
+              <Bot className="w-5 h-5 text-white" />
             </div>
-            <span className="font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{data.label}</span>
+            <span className="font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent text-sm">{data.label}</span>
           </div>
-          <p className="text-xs text-muted-foreground">{data.description}</p>
-          <Badge variant="outline" className="mt-2 text-xs border-purple-500/50 text-purple-400">
+          <p className="text-xs text-slate-400 leading-relaxed mb-2">{data.description}</p>
+          <Badge variant="outline" className="text-xs border-purple-500/50 text-purple-300 bg-purple-500/10">
             {data.aiModel}
           </Badge>
           
-          {/* Multiple Input/Output Handles */}
-          <Handle
-            type="target"
-            position={Position.Left}
-            id="input-1"
-            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
-            style={{ left: '-6px', top: '30%' }}
-          />
-          <Handle
-            type="target"
-            position={Position.Left}
-            id="input-2"
-            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
-            style={{ left: '-6px', top: '70%' }}
-          />
-          <Handle
-            type="target"
-            position={Position.Left}
-            id="input-3"
-            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
-            style={{ left: '-6px', top: '50%' }}
-          />
+          {/* Dynamic Input Handles */}
+          {Array.from({ length: maxInputs }, (_, index) => (
+            <Handle
+              key={`input-${index + 1}`}
+              type="target"
+              position={Position.Left}
+              id={`input-${index + 1}`}
+              className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-all duration-200 hover:scale-110"
+              style={{ 
+                left: '-6px', 
+                top: `${30 + (index * 15)}%`,
+                opacity: index < connectedInputs.length + 1 ? 1 : 0.3
+              }}
+            />
+          ))}
           
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output-1"
-            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
-            style={{ right: '-6px', top: '30%' }}
-          />
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output-2"
-            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
-            style={{ right: '-6px', top: '70%' }}
-          />
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="output-3"
-            className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-colors"
-            style={{ right: '-6px', top: '50%' }}
-          />
+          {/* Dynamic Output Handles */}
+          {Array.from({ length: maxOutputs }, (_, index) => (
+            <Handle
+              key={`output-${index + 1}`}
+              type="source"
+              position={Position.Right}
+              id={`output-${index + 1}`}
+              className="w-3 h-3 bg-purple-500 border-2 border-purple-300 hover:bg-purple-400 transition-all duration-200 hover:scale-110"
+              style={{ 
+                right: '-6px', 
+                top: `${30 + (index * 15)}%`,
+                opacity: index < connectedOutputs.length + 1 ? 1 : 0.3
+              }}
+            />
+          ))}
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={handleEdit} className="text-blue-600">
+      <ContextMenuContent className="w-48 bg-slate-900/95 border-slate-700 backdrop-blur-sm">
+        <ContextMenuItem onClick={handleEdit} className="text-blue-400 hover:bg-blue-500/20">
           <Edit3 className="w-4 h-4 mr-2" />
           Edit AI Prompt
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleDuplicate} className="text-green-600">
+        <ContextMenuItem onClick={handleDuplicate} className="text-emerald-400 hover:bg-emerald-500/20">
           <Copy className="w-4 h-4 mr-2" />
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem className="text-purple-600">
+        <ContextMenuItem className="text-purple-400 hover:bg-purple-500/20">
           <Palette className="w-4 h-4 mr-2" />
           Change Color
         </ContextMenuItem>
-        <ContextMenuItem className="text-cyan-600">
+        <ContextMenuItem className="text-cyan-400 hover:bg-cyan-500/20">
           <Zap className="w-4 h-4 mr-2" />
           Test AI Response
         </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-600">
+        <ContextMenuSeparator className="bg-slate-700" />
+        <ContextMenuItem onClick={handleDisconnect} className="text-orange-400 hover:bg-orange-500/20">
           <Unlink className="w-4 h-4 mr-2" />
           Disconnect All
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleDelete} className="text-red-600">
+        <ContextMenuItem onClick={handleDelete} className="text-red-400 hover:bg-red-500/20">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
         </ContextMenuItem>
@@ -497,21 +479,24 @@ const Automation = () => {
         ...params,
         id: `edge-${params.source}-${params.target}-${Date.now()}`,
         type: 'smoothstep',
-        animated: false, // Solid line when connection is complete
+        animated: false,
         style: { 
-          stroke: '#00FFFF', 
-          strokeWidth: 3,
-          filter: 'drop-shadow(0 0 6px rgba(0, 255, 255, 0.6))'
+          stroke: '#00D9FF', 
+          strokeWidth: 2,
+          filter: 'drop-shadow(0 0 8px rgba(0, 217, 255, 0.4))'
         },
-        markerEnd: { type: MarkerType.ArrowClosed, color: '#00FFFF' },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#00D9FF' },
       };
       
       setEdges((eds) => addEdge(newEdge, eds));
       setIsConnecting(false);
       setPendingConnection(null);
       connectingNodeId.current = null;
+      
+      // Force re-render of nodes to update handle visibility
+      setNodes((nds) => [...nds]);
     },
-    [setEdges],
+    [setEdges, setNodes],
   );
 
   const onConnectStart = useCallback((event: any, { nodeId, handleId }: { nodeId: string | null, handleId: string | null }) => {
@@ -523,7 +508,6 @@ const Automation = () => {
   }, []);
 
   const onConnectEnd = useCallback((event: any) => {
-    // Check if we're over a valid target handle
     const targetElement = document.elementFromPoint(event.clientX, event.clientY);
     const targetHandle = targetElement?.closest('.react-flow__handle-target');
     
@@ -532,7 +516,6 @@ const Automation = () => {
       const targetHandleId = targetHandle.getAttribute('data-handleid');
       
       if (targetNodeId && targetNodeId !== pendingConnection.sourceNode) {
-        // Auto-connect when hovering over a valid target
         const connection: Connection = {
           source: pendingConnection.sourceNode,
           target: targetNodeId,
@@ -549,6 +532,7 @@ const Automation = () => {
     connectingNodeId.current = null;
   }, [pendingConnection, onConnect]);
 
+  // ... keep existing code (toolCategories and addNode function)
   const toolCategories = [
     {
       name: 'Triggers',
@@ -594,9 +578,9 @@ const Automation = () => {
                     toolCategories[3].items.includes(tool) ? 'condition' : 'action';
 
     const newNode: Node = {
-      id: `${nodes.length + 1}`,
+      id: `${Date.now()}`,
       type: nodeType,
-      position: { x: Math.random() * 500 + 200, y: Math.random() * 300 + 200 },
+      position: { x: Math.random() * 400 + 300, y: Math.random() * 200 + 200 },
       data: { 
         ...tool,
         icon: tool.icon
@@ -607,18 +591,18 @@ const Automation = () => {
   };
 
   return (
-    <div className="h-full flex animate-fade-in overflow-hidden">
+    <div className="h-screen flex bg-slate-950 overflow-hidden">
       {/* Left Panel - Tools with scroll */}
-      <div className="w-80 bg-card border-r border-border flex flex-col overflow-hidden">
-        <div className="p-4 border-b border-border">
+      <div className="w-80 bg-slate-900/50 border-r border-slate-700/50 flex flex-col backdrop-blur-sm">
+        <div className="p-4 border-b border-slate-700/50">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Automation Builder</h2>
+            <h2 className="text-xl font-bold text-slate-100">Automation Builder</h2>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">
                 <Save className="w-4 h-4 mr-2" />
                 Save
               </Button>
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
                 <Play className="w-4 h-4 mr-2" />
                 Test
               </Button>
@@ -626,57 +610,51 @@ const Automation = () => {
           </div>
 
           {isConnecting && (
-            <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
-              <p className="text-sm text-cyan-400 font-medium">🔗 Connection Mode Active</p>
-              <p className="text-xs text-muted-foreground">Hover over a connection point to auto-connect</p>
+            <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg backdrop-blur-sm">
+              <p className="text-sm text-cyan-300 font-medium">🔗 Connection Mode Active</p>
+              <p className="text-xs text-slate-400">Hover over a connection point to auto-connect</p>
             </div>
           )}
         </div>
 
-        <div className="flex-1 p-4 overflow-y-auto scroll-hidden">
+        <div className="flex-1 p-4 overflow-y-auto">
           <div className="space-y-6">
             {toolCategories.map((category) => (
               <div key={category.name}>
-                <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                <h3 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wide">
                   {category.name}
                 </h3>
                 <div className="space-y-2">
                   {category.items.map((tool) => (
                     <Card 
                       key={tool.id}
-                      className="p-3 cursor-pointer hover:bg-accent/50 transition-colors border-border/50"
+                      className="p-3 cursor-pointer hover:bg-slate-800/50 transition-all duration-200 border-slate-700/50 bg-slate-800/30 backdrop-blur-sm"
                       onClick={() => addNode(tool)}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          tool.color === 'green' ? 'bg-green-500/20' :
-                          tool.color === 'blue' ? 'bg-blue-500/20' :
-                          tool.color === 'purple' ? 'bg-purple-500/20' :
-                          tool.color === 'yellow' ? 'bg-yellow-500/20' :
-                          'bg-primary/20'
+                          tool.color === 'green' ? 'bg-emerald-500/20 text-emerald-400' :
+                          tool.color === 'blue' ? 'bg-blue-500/20 text-blue-400' :
+                          tool.color === 'purple' ? 'bg-purple-500/20 text-purple-400' :
+                          tool.color === 'yellow' ? 'bg-amber-500/20 text-amber-400' :
+                          'bg-slate-500/20 text-slate-400'
                         }`}>
-                          <tool.icon className={`w-4 h-4 ${
-                            tool.color === 'green' ? 'text-green-500' :
-                            tool.color === 'blue' ? 'text-blue-500' :
-                            tool.color === 'purple' ? 'text-purple-500' :
-                            tool.color === 'yellow' ? 'text-yellow-500' :
-                            'text-primary'
-                          }`} />
+                          <tool.icon className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm">{tool.label}</p>
+                            <p className="font-medium text-sm text-slate-200">{tool.label}</p>
                             {tool.aiModel && (
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge variant="secondary" className="text-xs bg-purple-500/20 text-purple-300 border-purple-500/30">
                                 {tool.aiModel}
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-slate-400 mt-1">
                             {tool.description}
                           </p>
                         </div>
-                        <Plus className="w-4 h-4 text-muted-foreground" />
+                        <Plus className="w-4 h-4 text-slate-500" />
                       </div>
                     </Card>
                   ))}
@@ -688,7 +666,7 @@ const Automation = () => {
       </div>
 
       {/* Main Canvas - No scroll */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -699,10 +677,10 @@ const Automation = () => {
           onConnectEnd={onConnectEnd}
           nodeTypes={nodeTypes}
           fitView
-          className="bg-background"
+          className="bg-slate-950"
           defaultEdgeOptions={{
-            style: { stroke: '#00FFFF', strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: '#00FFFF' },
+            style: { stroke: '#00D9FF', strokeWidth: 2 },
+            markerEnd: { type: MarkerType.ArrowClosed, color: '#00D9FF' },
           }}
           connectionLineStyle={{
             stroke: '#FF6B6B',
@@ -711,27 +689,27 @@ const Automation = () => {
             filter: 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.8))'
           }}
         >
-          <Controls className="bg-card border border-border" />
+          <Controls className="bg-slate-900/80 border border-slate-700/50 backdrop-blur-sm" />
           <MiniMap 
-            className="bg-card border border-border" 
+            className="bg-slate-900/80 border border-slate-700/50 backdrop-blur-sm" 
             nodeColor={(node) => {
               switch(node.type) {
-                case 'trigger': return '#22c55e';
+                case 'trigger': return '#10b981';
                 case 'action': return '#3b82f6';
-                case 'condition': return '#eab308';
+                case 'condition': return '#f59e0b';
                 case 'ai': return '#8b5cf6';
-                default: return '#00FFFF';
+                default: return '#00D9FF';
               }
             }}
-            maskColor="rgba(0, 0, 0, 0.8)"
+            maskColor="rgba(15, 23, 42, 0.8)"
           />
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#333" />
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#334155" />
         </ReactFlow>
 
         {/* Floating Action Button */}
         <div className="absolute bottom-6 right-6">
-          <Button size="lg" className="rounded-full w-14 h-14 shadow-lg">
-            <Settings className="w-6 h-6" />
+          <Button size="lg" className="rounded-full w-14 h-14 shadow-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/50 backdrop-blur-sm">
+            <Settings className="w-6 h-6 text-slate-300" />
           </Button>
         </div>
       </div>
