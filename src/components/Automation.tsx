@@ -40,8 +40,13 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
 
   const handleDisconnect = () => {
     const edges = getEdges();
-    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
-    deleteElements({ edges: connectedEdges });
+    const connectedEdgeIds = edges
+      .filter(edge => edge.source === id || edge.target === id)
+      .map(edge => edge.id);
+    
+    if (connectedEdgeIds.length > 0) {
+      deleteElements({ edges: connectedEdgeIds.map(edgeId => ({ id: edgeId })) });
+    }
   };
 
   return (
@@ -89,8 +94,13 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
 
   const handleDisconnect = () => {
     const edges = getEdges();
-    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
-    deleteElements({ edges: connectedEdges });
+    const connectedEdgeIds = edges
+      .filter(edge => edge.source === id || edge.target === id)
+      .map(edge => edge.id);
+    
+    if (connectedEdgeIds.length > 0) {
+      deleteElements({ edges: connectedEdgeIds.map(edgeId => ({ id: edgeId })) });
+    }
   };
 
   return (
@@ -146,8 +156,13 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
 
   const handleDisconnect = () => {
     const edges = getEdges();
-    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
-    deleteElements({ edges: connectedEdges });
+    const connectedEdgeIds = edges
+      .filter(edge => edge.source === id || edge.target === id)
+      .map(edge => edge.id);
+    
+    if (connectedEdgeIds.length > 0) {
+      deleteElements({ edges: connectedEdgeIds.map(edgeId => ({ id: edgeId })) });
+    }
   };
 
   return (
@@ -213,8 +228,13 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
 
   const handleDisconnect = () => {
     const edges = getEdges();
-    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
-    deleteElements({ edges: connectedEdges });
+    const connectedEdgeIds = edges
+      .filter(edge => edge.source === id || edge.target === id)
+      .map(edge => edge.id);
+    
+    if (connectedEdgeIds.length > 0) {
+      deleteElements({ edges: connectedEdgeIds.map(edgeId => ({ id: edgeId })) });
+    }
   };
 
   return (
@@ -324,6 +344,7 @@ const Automation = () => {
     connectingNodeId.current = null;
   }, []);
 
+  // ... keep existing code (toolCategories array)
   const toolCategories = [
     {
       name: 'Triggers',
