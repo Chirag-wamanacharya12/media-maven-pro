@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Calendar, 
@@ -15,7 +14,8 @@ import {
   ChevronRight,
   Plus,
   Grid3X3,
-  Send
+  Send,
+  Workflow
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -33,6 +33,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     { id: 'posts', label: 'Posts', icon: Send },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
     { id: 'inbox', label: 'Inbox', icon: Inbox },
+    { id: 'automation', label: 'Automation', icon: Workflow },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'media', label: 'Media Library', icon: FileImage },
     { id: 'ai-studio', label: 'AI Studio', icon: Bot },

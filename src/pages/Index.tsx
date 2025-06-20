@@ -7,6 +7,7 @@ import Posts from '@/components/Posts';
 import Calendar from '@/components/Calendar';
 import Inbox from '@/components/Inbox';
 import Analytics from '@/components/Analytics';
+import Automation from '@/components/Automation';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -21,6 +22,8 @@ const Index = () => {
         return <Calendar />;
       case 'inbox':
         return <Inbox />;
+      case 'automation':
+        return <Automation />;
       case 'analytics':
         return <Analytics />;
       case 'media':
