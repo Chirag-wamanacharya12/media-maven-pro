@@ -21,7 +21,7 @@ import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Play, Save, Settings, MessageSquare, Users, Share2, Bot, Timer, Filter, Trash2, Unlink, Copy, Edit3, Zap, Palette } from 'lucide-react';
+import { Plus, Play, Save, Settings, MessageSquare, Users, Share2, Bot, Timer, Filter, Trash2, Unlink, Copy, Edit3, Zap, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -30,7 +30,6 @@ import {
   ContextMenuSeparator,
 } from '@/components/ui/context-menu';
 
-// Custom Node Components
 const TriggerNode = ({ data, id }: { data: any; id: string }) => {
   const { deleteElements, getEdges, setNodes } = useReactFlow();
   
@@ -62,10 +61,9 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
     console.log('Edit trigger node:', id);
   };
 
-  // Get connected edges for dynamic handles
   const edges = getEdges();
   const connectedOutputs = edges.filter(edge => edge.source === id);
-  const showOutputHandle = connectedOutputs.length === 0; // Only show if no connections
+  const showOutputHandle = connectedOutputs.length === 0;
 
   return (
     <ContextMenu>
@@ -79,7 +77,6 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">{data.description}</p>
           
-          {/* Single Output Handle - only shown when no connections */}
           {showOutputHandle && (
             <Handle
               type="source"
@@ -149,7 +146,6 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
     console.log('Test action:', id);
   };
 
-  // Dynamic handle management
   const edges = getEdges();
   const connectedInputs = edges.filter(edge => edge.target === id);
   const connectedOutputs = edges.filter(edge => edge.source === id);
@@ -168,7 +164,6 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">{data.description}</p>
           
-          {/* Single Input Handle */}
           {showInputHandle && (
             <Handle
               type="target"
@@ -179,7 +174,6 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
             />
           )}
           
-          {/* Single Output Handle */}
           {showOutputHandle && (
             <Handle
               type="source"
@@ -249,7 +243,6 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
     console.log('Edit condition node:', id);
   };
 
-  // Dynamic handle management
   const edges = getEdges();
   const connectedInputs = edges.filter(edge => edge.target === id);
   const connectedYes = edges.filter(edge => edge.source === id && edge.sourceHandle === 'yes');
@@ -270,7 +263,6 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
             <p className="text-xs text-slate-300 leading-relaxed">{data.description}</p>
           </div>
           
-          {/* Single Input Handle */}
           {showInputHandle && (
             <Handle
               type="target"
@@ -281,7 +273,6 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
             />
           )}
           
-          {/* Output Handles for Yes/No */}
           {connectedYes.length === 0 && (
             <Handle
               id="yes"
@@ -360,7 +351,6 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
     console.log('Test AI response:', id);
   };
 
-  // Dynamic handle management
   const edges = getEdges();
   const connectedInputs = edges.filter(edge => edge.target === id);
   const connectedOutputs = edges.filter(edge => edge.source === id);
@@ -382,7 +372,6 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
             {data.aiModel}
           </Badge>
           
-          {/* Single Input Handle */}
           {showInputHandle && (
             <Handle
               type="target"
@@ -393,7 +382,6 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
             />
           )}
           
-          {/* Single Output Handle */}
           {showOutputHandle && (
             <Handle
               type="source"
@@ -457,8 +445,7 @@ const initialEdges: Edge[] = [];
 const Automation = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
-  const [connectionSource, setConnectionSource] = useState<{ nodeId: string, handleId: string } | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -476,48 +463,11 @@ const Automation = () => {
       };
       
       setEdges((eds) => addEdge(newEdge, eds));
-      setConnectionSource(null);
-      
-      // Force re-render to update handle visibility
       setNodes((nds) => [...nds]);
     },
     [setEdges, setNodes],
   );
 
-  const onNodeMouseEnter = useCallback((event: React.MouseEvent, node: Node) => {
-    setHoveredNode(node.id);
-    
-    // Auto-connect if we have a pending connection
-    if (connectionSource && connectionSource.nodeId !== node.id) {
-      const targetHandle = node.type === 'trigger' ? null : 'input';
-      
-      if (targetHandle || node.type === 'trigger') {
-        const connection: Connection = {
-          source: connectionSource.nodeId,
-          target: node.id,
-          sourceHandle: connectionSource.handleId,
-          targetHandle: targetHandle
-        };
-        onConnect(connection);
-      }
-    }
-  }, [connectionSource, onConnect]);
-
-  const onNodeMouseLeave = useCallback(() => {
-    setHoveredNode(null);
-  }, []);
-
-  const onConnectStart = useCallback((event: any, { nodeId, handleId }: { nodeId: string | null, handleId: string | null }) => {
-    if (nodeId && handleId) {
-      setConnectionSource({ nodeId, handleId });
-    }
-  }, []);
-
-  const onConnectEnd = useCallback(() => {
-    setConnectionSource(null);
-  }, []);
-
-  // ... keep existing code (toolCategories)
   const toolCategories = [
     {
       name: 'Triggers',
@@ -577,91 +527,94 @@ const Automation = () => {
 
   return (
     <div className="h-screen flex bg-gradient-to-br from-slate-950 to-slate-900 overflow-hidden">
-      {/* Left Panel - Tools with scroll */}
-      <div className="w-80 bg-slate-900/70 border-r border-slate-600/50 flex flex-col backdrop-blur-xl">
-        <div className="p-4 border-b border-slate-600/50">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-slate-100">Automation Builder</h2>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700/50 backdrop-blur-sm">
-                <Save className="w-4 h-4 mr-2" />
-                Save
-              </Button>
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg">
-                <Play className="w-4 h-4 mr-2" />
-                Test
-              </Button>
-            </div>
-          </div>
-
-          {connectionSource && (
-            <div className="p-3 bg-cyan-500/20 border border-cyan-400/40 rounded-lg backdrop-blur-sm">
-              <p className="text-sm text-cyan-200 font-medium">🔗 Connecting...</p>
-              <p className="text-xs text-slate-300">Hover over another element to connect</p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 p-4 overflow-y-auto">
-          <div className="space-y-6">
-            {toolCategories.map((category) => (
-              <div key={category.name}>
-                <h3 className="text-sm font-semibold text-slate-300 mb-3 uppercase tracking-wide">
-                  {category.name}
-                </h3>
-                <div className="space-y-2">
-                  {category.items.map((tool) => (
-                    <Card 
-                      key={tool.id}
-                      className="p-3 cursor-pointer hover:bg-slate-700/50 transition-all duration-200 border-slate-600/50 bg-slate-800/40 backdrop-blur-md hover:shadow-lg hover:border-slate-500/70"
-                      onClick={() => addNode(tool)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-md ${
-                          tool.color === 'green' ? 'bg-emerald-500/30 text-emerald-300' :
-                          tool.color === 'blue' ? 'bg-blue-500/30 text-blue-300' :
-                          tool.color === 'purple' ? 'bg-purple-500/30 text-purple-300' :
-                          tool.color === 'yellow' ? 'bg-amber-500/30 text-amber-300' :
-                          'bg-slate-500/30 text-slate-300'
-                        }`}>
-                          <tool.icon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm text-slate-100">{tool.label}</p>
-                            {tool.aiModel && (
-                              <Badge variant="secondary" className="text-xs bg-purple-500/30 text-purple-200 border-purple-400/40">
-                                {tool.aiModel}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-400 mt-1">
-                            {tool.description}
-                          </p>
-                        </div>
-                        <Plus className="w-4 h-4 text-slate-500" />
-                      </div>
-                    </Card>
-                  ))}
+      {/* Collapsible Left Panel */}
+      <div className={`${isSidebarCollapsed ? 'w-0' : 'w-80'} transition-all duration-300 bg-slate-900/70 border-r border-slate-600/50 flex flex-col backdrop-blur-xl overflow-hidden`}>
+        {!isSidebarCollapsed && (
+          <>
+            <div className="p-4 border-b border-slate-600/50">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-slate-100">Automation Builder</h2>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700/50 backdrop-blur-sm">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg">
+                    <Play className="w-4 h-4 mr-2" />
+                    Test
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+
+            <div className="flex-1 p-4 overflow-y-auto">
+              <div className="space-y-6">
+                {toolCategories.map((category) => (
+                  <div key={category.name}>
+                    <h3 className="text-sm font-semibold text-slate-300 mb-3 uppercase tracking-wide">
+                      {category.name}
+                    </h3>
+                    <div className="space-y-2">
+                      {category.items.map((tool) => (
+                        <Card 
+                          key={tool.id}
+                          className="p-3 cursor-pointer hover:bg-slate-700/50 transition-all duration-200 border-slate-600/50 bg-slate-800/40 backdrop-blur-md hover:shadow-lg hover:border-slate-500/70"
+                          onClick={() => addNode(tool)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-md ${
+                              tool.color === 'green' ? 'bg-emerald-500/30 text-emerald-300' :
+                              tool.color === 'blue' ? 'bg-blue-500/30 text-blue-300' :
+                              tool.color === 'purple' ? 'bg-purple-500/30 text-purple-300' :
+                              tool.color === 'yellow' ? 'bg-amber-500/30 text-amber-300' :
+                              'bg-slate-500/30 text-slate-300'
+                            }`}>
+                              <tool.icon className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-sm text-slate-100">{tool.label}</p>
+                                {tool.aiModel && (
+                                  <Badge variant="secondary" className="text-xs bg-purple-500/30 text-purple-200 border-purple-400/40">
+                                    {tool.aiModel}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-400 mt-1">
+                                {tool.description}
+                              </p>
+                            </div>
+                            <Plus className="w-4 h-4 text-slate-500" />
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Main Canvas */}
       <div className="flex-1 relative">
+        {/* Sidebar Toggle Button */}
+        <Button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          size="sm"
+          variant="outline"
+          className="absolute top-4 left-4 z-20 bg-slate-800/80 border-slate-600/50 text-slate-300 hover:bg-slate-700/80 backdrop-blur-md"
+        >
+          {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </Button>
+
         <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onConnectStart={onConnectStart}
-          onConnectEnd={onConnectEnd}
-          onNodeMouseEnter={onNodeMouseEnter}
-          onNodeMouseLeave={onNodeMouseLeave}
           nodeTypes={nodeTypes}
           fitView
           className="bg-gradient-to-br from-slate-950 to-slate-900"
@@ -675,6 +628,11 @@ const Automation = () => {
             strokeDasharray: '8,4',
             filter: 'drop-shadow(0 0 12px rgba(255, 107, 107, 0.8))'
           }}
+          panOnScroll={false}
+          zoomOnScroll={false}
+          panOnDrag={true}
+          zoomOnPinch={false}
+          zoomOnDoubleClick={false}
         >
           <Controls className="bg-slate-900/80 border border-slate-600/50 backdrop-blur-md shadow-xl" />
           <MiniMap 
