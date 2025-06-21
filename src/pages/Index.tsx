@@ -9,6 +9,7 @@ import Inbox from '@/components/Inbox';
 import Analytics from '@/components/Analytics';
 import Automation from '@/components/Automation';
 import Integrations from '@/components/Integrations';
+import AIStudio from '@/components/AIStudio';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -40,15 +41,7 @@ const Index = () => {
           </div>
         );
       case 'ai-studio':
-        return (
-          <div className="p-6 animate-fade-in">
-            <h1 className="text-3xl font-bold mb-2">AI Studio</h1>
-            <p className="text-muted-foreground mb-8">AI-powered content creation and optimization</p>
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">AI Studio coming soon...</p>
-            </div>
-          </div>
-        );
+        return <AIStudio />;
       case 'clients':
         return (
           <div className="p-6 animate-fade-in">
