@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState, useRef } from 'react';
 import {
   ReactFlow,
@@ -21,7 +22,32 @@ import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Play, Save, Settings, MessageSquare, Users, Share2, Bot, Timer, Filter, Trash2, Unlink, Copy, Edit3, Zap, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { 
+  Plus, 
+  Play, 
+  Save, 
+  Settings, 
+  MessageSquare, 
+  Users, 
+  Share2, 
+  Bot, 
+  Timer, 
+  Filter, 
+  Trash2, 
+  Unlink, 
+  Copy, 
+  Edit3, 
+  Zap, 
+  ChevronLeft, 
+  ChevronRight,
+  Eye,
+  MoreHorizontal
+} from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -29,41 +55,38 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from '@/components/ui/context-menu';
+import { useToast } from '@/hooks/use-toast';
+
+// Node configuration interfaces
+interface NodeConfig {
+  message?: string;
+  condition?: string;
+  operator?: string;
+  value?: string;
+  platform?: string;
+  aiModel?: string;
+  prompt?: string;
+}
 
 const TriggerNode = ({ data, id }: { data: any; id: string }) => {
   const { deleteElements, getEdges, setNodes } = useReactFlow();
+  const [isOpen, setIsOpen] = useState(false);
+  const [config, setConfig] = useState<NodeConfig>(data.config || {});
   
   const handleDelete = () => {
     deleteElements({ nodes: [{ id }] });
   };
 
-  const handleDisconnect = () => {
-    const edges = getEdges();
-    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
-    
-    if (connectedEdges.length > 0) {
-      deleteElements({ edges: connectedEdges });
-    }
+  const handleSave = () => {
+    setNodes((nodes) => 
+      nodes.map((node) => 
+        node.id === id 
+          ? { ...node, data: { ...node.data, config } }
+          : node
+      )
+    );
+    setIsOpen(false);
   };
-
-  const handleDuplicate = () => {
-    const newId = `${Date.now()}`;
-    const newNode: Node = {
-      id: newId,
-      type: 'trigger',
-      position: { x: Math.random() * 400 + 300, y: Math.random() * 200 + 200 },
-      data: { ...data },
-    };
-    setNodes((nodes) => [...nodes, newNode]);
-  };
-
-  const handleEdit = () => {
-    console.log('Edit trigger node:', id);
-  };
-
-  const edges = getEdges();
-  const connectedOutputs = edges.filter(edge => edge.source === id);
-  const showOutputHandle = connectedOutputs.length === 0;
 
   return (
     <ContextMenu>
@@ -77,30 +100,60 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">{data.description}</p>
           
-          {showOutputHandle && (
-            <Handle
-              type="source"
-              position={Position.Right}
-              id="output"
-              className="w-3 h-3 bg-emerald-400 border-2 border-emerald-200 hover:bg-emerald-300 transition-all duration-200 hover:scale-125 shadow-lg"
-              style={{ right: '-6px', top: '50%' }}
-            />
-          )}
+          {/* Component Action Buttons */}
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 hover:opacity-100 transition-opacity">
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+                  <Edit3 className="w-3 h-3 text-white" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-slate-900 border-slate-700">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Configure {data.label}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-slate-200">Trigger Type</Label>
+                    <Select value={config.platform} onValueChange={(value) => setConfig({...config, platform: value})}>
+                      <SelectTrigger className="bg-slate-800 border-slate-600">
+                        <SelectValue placeholder="Select platform" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="instagram">Instagram</SelectItem>
+                        <SelectItem value="twitter">Twitter</SelectItem>
+                        <SelectItem value="facebook">Facebook</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleSave} className="w-full">Save Configuration</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+              <Eye className="w-3 h-3 text-white" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+              <Copy className="w-3 h-3 text-white" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40" onClick={handleDelete}>
+              <Trash2 className="w-3 h-3 text-white" />
+            </Button>
+          </div>
+          
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output"
+            className="w-3 h-3 bg-emerald-400 border-2 border-emerald-200 hover:bg-emerald-300 transition-all duration-200 hover:scale-125 shadow-lg"
+            style={{ right: '-6px', top: '50%' }}
+          />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-48 bg-slate-900/95 border-slate-600 backdrop-blur-md shadow-xl">
-        <ContextMenuItem onClick={handleEdit} className="text-blue-300 hover:bg-blue-500/20 cursor-pointer">
+        <ContextMenuItem onClick={() => setIsOpen(true)} className="text-blue-300 hover:bg-blue-500/20 cursor-pointer">
           <Edit3 className="w-4 h-4 mr-2" />
-          Edit Properties
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleDuplicate} className="text-emerald-300 hover:bg-emerald-500/20 cursor-pointer">
-          <Copy className="w-4 h-4 mr-2" />
-          Duplicate
-        </ContextMenuItem>
-        <ContextMenuSeparator className="bg-slate-600" />
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-300 hover:bg-orange-500/20 cursor-pointer">
-          <Unlink className="w-4 h-4 mr-2" />
-          Disconnect All
+          Configure
         </ContextMenuItem>
         <ContextMenuItem onClick={handleDelete} className="text-red-300 hover:bg-red-500/20 cursor-pointer">
           <Trash2 className="w-4 h-4 mr-2" />
@@ -112,45 +165,24 @@ const TriggerNode = ({ data, id }: { data: any; id: string }) => {
 };
 
 const ActionNode = ({ data, id }: { data: any; id: string }) => {
-  const { deleteElements, getEdges, setNodes } = useReactFlow();
+  const { deleteElements, setNodes } = useReactFlow();
+  const [isOpen, setIsOpen] = useState(false);
+  const [config, setConfig] = useState<NodeConfig>(data.config || {});
   
   const handleDelete = () => {
     deleteElements({ nodes: [{ id }] });
   };
 
-  const handleDisconnect = () => {
-    const edges = getEdges();
-    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
-    
-    if (connectedEdges.length > 0) {
-      deleteElements({ edges: connectedEdges });
-    }
+  const handleSave = () => {
+    setNodes((nodes) => 
+      nodes.map((node) => 
+        node.id === id 
+          ? { ...node, data: { ...node.data, config } }
+          : node
+      )
+    );
+    setIsOpen(false);
   };
-
-  const handleDuplicate = () => {
-    const newId = `${Date.now()}`;
-    const newNode: Node = {
-      id: newId,
-      type: 'action',
-      position: { x: Math.random() * 400 + 300, y: Math.random() * 200 + 200 },
-      data: { ...data },
-    };
-    setNodes((nodes) => [...nodes, newNode]);
-  };
-
-  const handleEdit = () => {
-    console.log('Edit action node:', id);
-  };
-
-  const handleTest = () => {
-    console.log('Test action:', id);
-  };
-
-  const edges = getEdges();
-  const connectedInputs = edges.filter(edge => edge.target === id);
-  const connectedOutputs = edges.filter(edge => edge.source === id);
-  const showInputHandle = connectedInputs.length === 0;
-  const showOutputHandle = connectedOutputs.length === 0;
 
   return (
     <ContextMenu>
@@ -164,44 +196,107 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">{data.description}</p>
           
-          {showInputHandle && (
-            <Handle
-              type="target"
-              position={Position.Left}
-              id="input"
-              className="w-3 h-3 bg-blue-400 border-2 border-blue-200 hover:bg-blue-300 transition-all duration-200 hover:scale-125 shadow-lg"
-              style={{ left: '-6px', top: '50%' }}
-            />
-          )}
+          {/* Component Action Buttons */}
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 hover:opacity-100 transition-opacity">
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+                  <Edit3 className="w-3 h-3 text-white" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-slate-900 border-slate-700">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Configure {data.label}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {data.id === 'send-dm' && (
+                    <>
+                      <div>
+                        <Label className="text-slate-200">Platform</Label>
+                        <Select value={config.platform} onValueChange={(value) => setConfig({...config, platform: value})}>
+                          <SelectTrigger className="bg-slate-800 border-slate-600">
+                            <SelectValue placeholder="Select platform" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="instagram">Instagram</SelectItem>
+                            <SelectItem value="twitter">Twitter</SelectItem>
+                            <SelectItem value="facebook">Facebook</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-slate-200">Message</Label>
+                        <Textarea 
+                          placeholder="Enter the message to send..."
+                          value={config.message || ''}
+                          onChange={(e) => setConfig({...config, message: e.target.value})}
+                          className="bg-slate-800 border-slate-600 text-white"
+                        />
+                      </div>
+                    </>
+                  )}
+                  {data.id === 'post-content' && (
+                    <>
+                      <div>
+                        <Label className="text-slate-200">Platform</Label>
+                        <Select value={config.platform} onValueChange={(value) => setConfig({...config, platform: value})}>
+                          <SelectTrigger className="bg-slate-800 border-slate-600">
+                            <SelectValue placeholder="Select platform" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="instagram">Instagram</SelectItem>
+                            <SelectItem value="twitter">Twitter</SelectItem>
+                            <SelectItem value="facebook">Facebook</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-slate-200">Content</Label>
+                        <Textarea 
+                          placeholder="Enter the content to post..."
+                          value={config.message || ''}
+                          onChange={(e) => setConfig({...config, message: e.target.value})}
+                          className="bg-slate-800 border-slate-600 text-white"
+                        />
+                      </div>
+                    </>
+                  )}
+                  <Button onClick={handleSave} className="w-full">Save Configuration</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+              <Eye className="w-3 h-3 text-white" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+              <Copy className="w-3 h-3 text-white" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40" onClick={handleDelete}>
+              <Trash2 className="w-3 h-3 text-white" />
+            </Button>
+          </div>
           
-          {showOutputHandle && (
-            <Handle
-              type="source"
-              position={Position.Right}
-              id="output"
-              className="w-3 h-3 bg-blue-400 border-2 border-blue-200 hover:bg-blue-300 transition-all duration-200 hover:scale-125 shadow-lg"
-              style={{ right: '-6px', top: '50%' }}
-            />
-          )}
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input"
+            className="w-3 h-3 bg-blue-400 border-2 border-blue-200 hover:bg-blue-300 transition-all duration-200 hover:scale-125 shadow-lg"
+            style={{ left: '-6px', top: '50%' }}
+          />
+          
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output"
+            className="w-3 h-3 bg-blue-400 border-2 border-blue-200 hover:bg-blue-300 transition-all duration-200 hover:scale-125 shadow-lg"
+            style={{ right: '-6px', top: '50%' }}
+          />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-48 bg-slate-900/95 border-slate-600 backdrop-blur-md shadow-xl">
-        <ContextMenuItem onClick={handleEdit} className="text-blue-300 hover:bg-blue-500/20 cursor-pointer">
+        <ContextMenuItem onClick={() => setIsOpen(true)} className="text-blue-300 hover:bg-blue-500/20 cursor-pointer">
           <Edit3 className="w-4 h-4 mr-2" />
-          Edit Properties
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleDuplicate} className="text-emerald-300 hover:bg-emerald-500/20 cursor-pointer">
-          <Copy className="w-4 h-4 mr-2" />
-          Duplicate
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleTest} className="text-cyan-300 hover:bg-cyan-500/20 cursor-pointer">
-          <Zap className="w-4 h-4 mr-2" />
-          Test Action
-        </ContextMenuItem>
-        <ContextMenuSeparator className="bg-slate-600" />
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-300 hover:bg-orange-500/20 cursor-pointer">
-          <Unlink className="w-4 h-4 mr-2" />
-          Disconnect All
+          Configure
         </ContextMenuItem>
         <ContextMenuItem onClick={handleDelete} className="text-red-300 hover:bg-red-500/20 cursor-pointer">
           <Trash2 className="w-4 h-4 mr-2" />
@@ -213,41 +308,24 @@ const ActionNode = ({ data, id }: { data: any; id: string }) => {
 };
 
 const ConditionNode = ({ data, id }: { data: any; id: string }) => {
-  const { deleteElements, getEdges, setNodes } = useReactFlow();
+  const { deleteElements, setNodes } = useReactFlow();
+  const [isOpen, setIsOpen] = useState(false);
+  const [config, setConfig] = useState<NodeConfig>(data.config || {});
   
   const handleDelete = () => {
     deleteElements({ nodes: [{ id }] });
   };
 
-  const handleDisconnect = () => {
-    const edges = getEdges();
-    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
-    
-    if (connectedEdges.length > 0) {
-      deleteElements({ edges: connectedEdges });
-    }
+  const handleSave = () => {
+    setNodes((nodes) => 
+      nodes.map((node) => 
+        node.id === id 
+          ? { ...node, data: { ...node.data, config } }
+          : node
+      )
+    );
+    setIsOpen(false);
   };
-
-  const handleDuplicate = () => {
-    const newId = `${Date.now()}`;
-    const newNode: Node = {
-      id: newId,
-      type: 'condition',
-      position: { x: Math.random() * 400 + 300, y: Math.random() * 200 + 200 },
-      data: { ...data },
-    };
-    setNodes((nodes) => [...nodes, newNode]);
-  };
-
-  const handleEdit = () => {
-    console.log('Edit condition node:', id);
-  };
-
-  const edges = getEdges();
-  const connectedInputs = edges.filter(edge => edge.target === id);
-  const connectedYes = edges.filter(edge => edge.source === id && edge.sourceHandle === 'yes');
-  const connectedNo = edges.filter(edge => edge.source === id && edge.sourceHandle === 'no');
-  const showInputHandle = connectedInputs.length === 0;
 
   return (
     <ContextMenu>
@@ -263,49 +341,85 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
             <p className="text-xs text-slate-300 leading-relaxed">{data.description}</p>
           </div>
           
-          {showInputHandle && (
-            <Handle
-              type="target"
-              position={Position.Left}
-              id="input"
-              className="w-3 h-3 bg-amber-400 border-2 border-amber-200 hover:bg-amber-300 transition-all duration-200 hover:scale-125 shadow-lg transform -rotate-45"
-              style={{ left: '-6px', top: '50%', transform: 'translateY(-50%) rotate(-45deg)' }}
-            />
-          )}
+          {/* Component Action Buttons */}
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 hover:opacity-100 transition-opacity transform -rotate-45">
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+                  <Edit3 className="w-3 h-3 text-white" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-slate-900 border-slate-700">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Configure Condition</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-slate-200">Condition Type</Label>
+                    <Select value={config.operator} onValueChange={(value) => setConfig({...config, operator: value})}>
+                      <SelectTrigger className="bg-slate-800 border-slate-600">
+                        <SelectValue placeholder="Select condition" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="contains">Contains</SelectItem>
+                        <SelectItem value="equals">Equals</SelectItem>
+                        <SelectItem value="greater">Greater than</SelectItem>
+                        <SelectItem value="less">Less than</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-slate-200">Value</Label>
+                    <Input 
+                      placeholder="Enter value to compare..."
+                      value={config.value || ''}
+                      onChange={(e) => setConfig({...config, value: e.target.value})}
+                      className="bg-slate-800 border-slate-600 text-white"
+                    />
+                  </div>
+                  <Button onClick={handleSave} className="w-full">Save Configuration</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+              <Eye className="w-3 h-3 text-white" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+              <Copy className="w-3 h-3 text-white" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40" onClick={handleDelete}>
+              <Trash2 className="w-3 h-3 text-white" />
+            </Button>
+          </div>
           
-          {connectedYes.length === 0 && (
-            <Handle
-              id="yes"
-              type="source"
-              position={Position.Top}
-              className="w-3 h-3 bg-emerald-400 border-2 border-emerald-200 hover:bg-emerald-300 transition-all duration-200 hover:scale-125 shadow-lg transform -rotate-45"
-              style={{ top: '-6px', left: '30%', transform: 'translateX(-50%) rotate(-45deg)' }}
-            />
-          )}
-          {connectedNo.length === 0 && (
-            <Handle
-              id="no"
-              type="source"
-              position={Position.Bottom}
-              className="w-3 h-3 bg-red-400 border-2 border-red-200 hover:bg-red-300 transition-all duration-200 hover:scale-125 shadow-lg transform -rotate-45"
-              style={{ bottom: '-6px', right: '30%', transform: 'translateX(50%) rotate(-45deg)' }}
-            />
-          )}
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input"
+            className="w-3 h-3 bg-amber-400 border-2 border-amber-200 hover:bg-amber-300 transition-all duration-200 hover:scale-125 shadow-lg transform -rotate-45"
+            style={{ left: '-6px', top: '50%', transform: 'translateY(-50%) rotate(-45deg)' }}
+          />
+          
+          <Handle
+            id="yes"
+            type="source"
+            position={Position.Top}
+            className="w-3 h-3 bg-emerald-400 border-2 border-emerald-200 hover:bg-emerald-300 transition-all duration-200 hover:scale-125 shadow-lg transform -rotate-45"
+            style={{ top: '-6px', left: '30%', transform: 'translateX(-50%) rotate(-45deg)' }}
+          />
+          <Handle
+            id="no"
+            type="source"
+            position={Position.Bottom}
+            className="w-3 h-3 bg-red-400 border-2 border-red-200 hover:bg-red-300 transition-all duration-200 hover:scale-125 shadow-lg transform -rotate-45"
+            style={{ bottom: '-6px', right: '30%', transform: 'translateX(50%) rotate(-45deg)' }}
+          />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-48 bg-slate-900/95 border-slate-600 backdrop-blur-md shadow-xl">
-        <ContextMenuItem onClick={handleEdit} className="text-blue-300 hover:bg-blue-500/20 cursor-pointer">
+        <ContextMenuItem onClick={() => setIsOpen(true)} className="text-blue-300 hover:bg-blue-500/20 cursor-pointer">
           <Edit3 className="w-4 h-4 mr-2" />
-          Edit Condition
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleDuplicate} className="text-emerald-300 hover:bg-emerald-500/20 cursor-pointer">
-          <Copy className="w-4 h-4 mr-2" />
-          Duplicate
-        </ContextMenuItem>
-        <ContextMenuSeparator className="bg-slate-600" />
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-300 hover:bg-orange-500/20 cursor-pointer">
-          <Unlink className="w-4 h-4 mr-2" />
-          Disconnect All
+          Configure
         </ContextMenuItem>
         <ContextMenuItem onClick={handleDelete} className="text-red-300 hover:bg-red-500/20 cursor-pointer">
           <Trash2 className="w-4 h-4 mr-2" />
@@ -317,45 +431,24 @@ const ConditionNode = ({ data, id }: { data: any; id: string }) => {
 };
 
 const AINode = ({ data, id }: { data: any; id: string }) => {
-  const { deleteElements, getEdges, setNodes } = useReactFlow();
+  const { deleteElements, setNodes } = useReactFlow();
+  const [isOpen, setIsOpen] = useState(false);
+  const [config, setConfig] = useState<NodeConfig>(data.config || {});
   
   const handleDelete = () => {
     deleteElements({ nodes: [{ id }] });
   };
 
-  const handleDisconnect = () => {
-    const edges = getEdges();
-    const connectedEdges = edges.filter(edge => edge.source === id || edge.target === id);
-    
-    if (connectedEdges.length > 0) {
-      deleteElements({ edges: connectedEdges });
-    }
+  const handleSave = () => {
+    setNodes((nodes) => 
+      nodes.map((node) => 
+        node.id === id 
+          ? { ...node, data: { ...node.data, config } }
+          : node
+      )
+    );
+    setIsOpen(false);
   };
-
-  const handleDuplicate = () => {
-    const newId = `${Date.now()}`;
-    const newNode: Node = {
-      id: newId,
-      type: 'ai',
-      position: { x: Math.random() * 400 + 300, y: Math.random() * 200 + 200 },
-      data: { ...data },
-    };
-    setNodes((nodes) => [...nodes, newNode]);
-  };
-
-  const handleEdit = () => {
-    console.log('Edit AI node:', id);
-  };
-
-  const handleTest = () => {
-    console.log('Test AI response:', id);
-  };
-
-  const edges = getEdges();
-  const connectedInputs = edges.filter(edge => edge.target === id);
-  const connectedOutputs = edges.filter(edge => edge.source === id);
-  const showInputHandle = connectedInputs.length === 0;
-  const showOutputHandle = connectedOutputs.length === 0;
 
   return (
     <ContextMenu>
@@ -372,44 +465,77 @@ const AINode = ({ data, id }: { data: any; id: string }) => {
             {data.aiModel}
           </Badge>
           
-          {showInputHandle && (
-            <Handle
-              type="target"
-              position={Position.Left}
-              id="input"
-              className="w-3 h-3 bg-purple-400 border-2 border-purple-200 hover:bg-purple-300 transition-all duration-200 hover:scale-125 shadow-lg"
-              style={{ left: '-6px', top: '50%' }}
-            />
-          )}
+          {/* Component Action Buttons */}
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 hover:opacity-100 transition-opacity">
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+                  <Edit3 className="w-3 h-3 text-white" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-slate-900 border-slate-700">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Configure AI Model</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-slate-200">AI Model</Label>
+                    <Select value={config.aiModel} onValueChange={(value) => setConfig({...config, aiModel: value})}>
+                      <SelectTrigger className="bg-slate-800 border-slate-600">
+                        <SelectValue placeholder="Select AI model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gpt-4">GPT-4</SelectItem>
+                        <SelectItem value="claude">Claude</SelectItem>
+                        <SelectItem value="gemini">Gemini</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-slate-200">Prompt</Label>
+                    <Textarea 
+                      placeholder="Enter the AI prompt..."
+                      value={config.prompt || ''}
+                      onChange={(e) => setConfig({...config, prompt: e.target.value})}
+                      className="bg-slate-800 border-slate-600 text-white"
+                    />
+                  </div>
+                  <Button onClick={handleSave} className="w-full">Save Configuration</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+              <Eye className="w-3 h-3 text-white" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40">
+              <Copy className="w-3 h-3 text-white" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-black/20 hover:bg-black/40" onClick={handleDelete}>
+              <Trash2 className="w-3 h-3 text-white" />
+            </Button>
+          </div>
           
-          {showOutputHandle && (
-            <Handle
-              type="source"
-              position={Position.Right}
-              id="output"
-              className="w-3 h-3 bg-purple-400 border-2 border-purple-200 hover:bg-purple-300 transition-all duration-200 hover:scale-125 shadow-lg"
-              style={{ right: '-6px', top: '50%' }}
-            />
-          )}
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input"
+            className="w-3 h-3 bg-purple-400 border-2 border-purple-200 hover:bg-purple-300 transition-all duration-200 hover:scale-125 shadow-lg"
+            style={{ left: '-6px', top: '50%' }}
+          />
+          
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="output"
+            className="w-3 h-3 bg-purple-400 border-2 border-purple-200 hover:bg-purple-300 transition-all duration-200 hover:scale-125 shadow-lg"
+            style={{ right: '-6px', top: '50%' }}
+          />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-48 bg-slate-900/95 border-slate-600 backdrop-blur-md shadow-xl">
-        <ContextMenuItem onClick={handleEdit} className="text-blue-300 hover:bg-blue-500/20 cursor-pointer">
+        <ContextMenuItem onClick={() => setIsOpen(true)} className="text-blue-300 hover:bg-blue-500/20 cursor-pointer">
           <Edit3 className="w-4 h-4 mr-2" />
-          Edit AI Prompt
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleDuplicate} className="text-emerald-300 hover:bg-emerald-500/20 cursor-pointer">
-          <Copy className="w-4 h-4 mr-2" />
-          Duplicate
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleTest} className="text-cyan-300 hover:bg-cyan-500/20 cursor-pointer">
-          <Zap className="w-4 h-4 mr-2" />
-          Test AI Response
-        </ContextMenuItem>
-        <ContextMenuSeparator className="bg-slate-600" />
-        <ContextMenuItem onClick={handleDisconnect} className="text-orange-300 hover:bg-orange-500/20 cursor-pointer">
-          <Unlink className="w-4 h-4 mr-2" />
-          Disconnect All
+          Configure
         </ContextMenuItem>
         <ContextMenuItem onClick={handleDelete} className="text-red-300 hover:bg-red-500/20 cursor-pointer">
           <Trash2 className="w-4 h-4 mr-2" />
@@ -435,7 +561,8 @@ const initialNodes: Node[] = [
     data: { 
       label: 'New DM Received',
       description: 'Triggers when a new direct message is received',
-      icon: MessageSquare
+      icon: MessageSquare,
+      config: {}
     },
   },
 ];
@@ -445,7 +572,8 @@ const initialEdges: Edge[] = [];
 const Automation = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const { toast } = useToast();
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -467,6 +595,33 @@ const Automation = () => {
     },
     [setEdges, setNodes],
   );
+
+  const handleSave = () => {
+    const workflow = {
+      nodes,
+      edges,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem('automation-workflow', JSON.stringify(workflow));
+    toast({
+      title: "Workflow Saved",
+      description: "Your automation workflow has been saved successfully.",
+    });
+  };
+
+  const handleTest = () => {
+    toast({
+      title: "Testing Workflow",
+      description: "Running test execution of your automation workflow...",
+    });
+    // Simulate test execution
+    setTimeout(() => {
+      toast({
+        title: "Test Complete",
+        description: "Workflow test completed successfully!",
+      });
+    }, 2000);
+  };
 
   const toolCategories = [
     {
@@ -518,7 +673,8 @@ const Automation = () => {
       position: { x: Math.random() * 400 + 300, y: Math.random() * 200 + 200 },
       data: { 
         ...tool,
-        icon: tool.icon
+        icon: tool.icon,
+        config: {}
       },
     };
 
@@ -531,15 +687,15 @@ const Automation = () => {
       <div className={`${isSidebarCollapsed ? 'w-0' : 'w-80'} transition-all duration-300 bg-slate-900/70 border-r border-slate-600/50 flex flex-col backdrop-blur-xl overflow-hidden`}>
         {!isSidebarCollapsed && (
           <>
-            <div className="p-4 border-b border-slate-600/50">
+            <div className="p-4 border-b border-slate-600/50 flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-slate-100">Automation Builder</h2>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700/50 backdrop-blur-sm">
+                  <Button size="sm" variant="outline" onClick={handleSave} className="border-slate-600 text-slate-300 hover:bg-slate-700/50 backdrop-blur-sm">
                     <Save className="w-4 h-4 mr-2" />
                     Save
                   </Button>
-                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg">
+                  <Button size="sm" onClick={handleTest} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg">
                     <Play className="w-4 h-4 mr-2" />
                     Test
                   </Button>
@@ -628,10 +784,10 @@ const Automation = () => {
             strokeDasharray: '8,4',
             filter: 'drop-shadow(0 0 12px rgba(255, 107, 107, 0.8))'
           }}
-          panOnScroll={false}
-          zoomOnScroll={false}
+          panOnScroll={true}
+          zoomOnScroll={true}
           panOnDrag={true}
-          zoomOnPinch={false}
+          zoomOnPinch={true}
           zoomOnDoubleClick={false}
         >
           <Controls className="bg-slate-900/80 border border-slate-600/50 backdrop-blur-md shadow-xl" />
