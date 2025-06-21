@@ -784,11 +784,12 @@ const Automation = () => {
             strokeDasharray: '8,4',
             filter: 'drop-shadow(0 0 12px rgba(255, 107, 107, 0.8))'
           }}
-          panOnScroll={true}
+          panOnScroll={false}
           zoomOnScroll={true}
           panOnDrag={true}
           zoomOnPinch={true}
           zoomOnDoubleClick={false}
+          preventScrolling={false}
         >
           <Controls className="bg-slate-900/80 border border-slate-600/50 backdrop-blur-md shadow-xl" />
           <MiniMap 
