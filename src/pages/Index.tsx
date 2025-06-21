@@ -8,6 +8,7 @@ import Calendar from '@/components/Calendar';
 import Inbox from '@/components/Inbox';
 import Analytics from '@/components/Analytics';
 import Automation from '@/components/Automation';
+import Integrations from '@/components/Integrations';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -26,6 +27,8 @@ const Index = () => {
         return <Automation />;
       case 'analytics':
         return <Analytics />;
+      case 'integrations':
+        return <Integrations />;
       case 'media':
         return (
           <div className="p-6 animate-fade-in">
@@ -63,16 +66,6 @@ const Index = () => {
             <p className="text-muted-foreground mb-8">Configure your account and preferences</p>
             <div className="text-center py-12">
               <p className="text-muted-foreground">Settings coming soon...</p>
-            </div>
-          </div>
-        );
-      case 'integrations':
-        return (
-          <div className="p-6 animate-fade-in">
-            <h1 className="text-3xl font-bold mb-2">Integrations</h1>
-            <p className="text-muted-foreground mb-8">Connect your social media accounts and third-party tools</p>
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Integrations coming soon...</p>
             </div>
           </div>
         );
