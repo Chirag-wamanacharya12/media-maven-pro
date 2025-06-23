@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -57,9 +56,12 @@ import {
   RotateCcw,
   CheckCircle,
   AlertCircle,
-  Loader2
+  Loader2,
+  Key
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ContentGenerationService, ContentGenerationParams } from '@/services/contentGenerationService';
+import ApiKeyInput from '@/components/ApiKeyInput';
 
 const AIStudio = () => {
   const [selectedModel, setSelectedModel] = useState('gpt-4');
@@ -76,8 +78,28 @@ const AIStudio = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [videoSegments, setVideoSegments] = useState<any[]>([]);
   const [selectedSegments, setSelectedSegments] = useState<number[]>([]);
+  const [apiKey, setApiKey] = useState<string>('');
+  const [contentService, setContentService] = useState<ContentGenerationService | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Load API key from localStorage on mount
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('openai_api_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+      setContentService(new ContentGenerationService(savedApiKey));
+    }
+  }, []);
+
+  const handleApiKeySet = (newApiKey: string) => {
+    setApiKey(newApiKey);
+    setContentService(new ContentGenerationService(newApiKey));
+    toast({
+      title: "API Key Saved",
+      description: "OpenAI API key configured successfully!",
+    });
+  };
 
   const aiModels = [
     { id: 'gpt-4', name: 'GPT-4', description: 'Most capable model for complex tasks', badge: 'Premium' },
@@ -214,19 +236,44 @@ const AIStudio = () => {
       return;
     }
 
+    if (!contentService) {
+      toast({
+        title: "Error",
+        description: "Please configure your OpenAI API key first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
     
-    // Simulate AI generation
-    setTimeout(() => {
-      const sampleContent = generateSampleContent();
-      setGeneratedContent(sampleContent);
-      setIsGenerating(false);
+    try {
+      const params: ContentGenerationParams = {
+        prompt,
+        contentType,
+        platform,
+        tone: tone.toLowerCase(),
+        creativity: creativity[0],
+        maxLength: maxLength[0]
+      };
+
+      const result = await contentService.generateContent(params);
+      setGeneratedContent(result.content);
       
       toast({
         title: "Content Generated",
         description: "Your AI-generated content is ready!",
       });
-    }, 2000);
+    } catch (error) {
+      console.error('Generation error:', error);
+      toast({
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : "Failed to generate content. Please check your API key and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const generateSampleContent = () => {
@@ -365,208 +412,233 @@ const AIStudio = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Configuration Panel */}
               <div className="lg:col-span-1 space-y-6">
-                <Card className="dark-card border-gray-800">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Settings className="w-5 h-5" />
-                      Configuration
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <Label className="text-gray-200 mb-2 block">AI Model</Label>
-                      <Select value={selectedModel} onValueChange={setSelectedModel}>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700">
-                          {aiModels.map((model) => (
-                            <SelectItem key={model.id} value={model.id} className="text-white hover:bg-gray-700">
-                              <div className="flex items-center gap-2">
-                                <span>{model.name}</span>
-                                <Badge variant="outline" className="text-xs border-cyan-500 text-cyan-400">
-                                  {model.badge}
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                {/* API Key Configuration */}
+                {!apiKey && (
+                  <ApiKeyInput onApiKeySet={handleApiKeySet} />
+                )}
 
-                    <div>
-                      <Label className="text-gray-200 mb-2 block">Content Type</Label>
-                      <Select value={contentType} onValueChange={setContentType}>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700">
-                          {contentTypes.map((type) => (
-                            <SelectItem key={type.id} value={type.id} className="text-white hover:bg-gray-700">
-                              <div className="flex items-center gap-2">
-                                <type.icon className="w-4 h-4" />
-                                {type.name}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label className="text-gray-200 mb-2 block">Platform</Label>
-                      <Select value={platform} onValueChange={setPlatform}>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700">
-                          {platforms.map((platform) => (
-                            <SelectItem key={platform.id} value={platform.id} className="text-white hover:bg-gray-700">
-                              {platform.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label className="text-gray-200 mb-2 block">Tone</Label>
-                      <Select value={tone} onValueChange={setTone}>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700">
-                          {tones.map((tone) => (
-                            <SelectItem key={tone} value={tone.toLowerCase()} className="text-white hover:bg-gray-700">
-                              {tone}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label className="text-gray-200 mb-3 block">Creativity: {creativity[0]}</Label>
-                      <Slider
-                        value={creativity}
-                        onValueChange={setCreativity}
-                        max={1}
-                        min={0}
-                        step={0.1}
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="text-gray-200 mb-3 block">Max Length: {maxLength[0]} chars</Label>
-                      <Slider
-                        value={maxLength}
-                        onValueChange={setMaxLength}
-                        max={2000}
-                        min={50}
-                        step={10}
-                        className="w-full"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Generation Panel */}
-              <div className="lg:col-span-2 space-y-6">
-                <Card className="dark-card border-gray-800">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Wand2 className="w-5 h-5" />
-                      AI Content Generator
-                    </CardTitle>
-                    <CardDescription className="text-gray-400">
-                      Describe what you want to create and let AI do the magic
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <Label className="text-gray-200 mb-2 block">Prompt</Label>
-                      <Textarea
-                        placeholder="Describe your content... e.g., 'Create an engaging Instagram reel about AI productivity tips with a hook that grabs attention in the first 3 seconds'"
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        className="bg-gray-800 border-gray-700 text-white min-h-[140px]"
-                      />
-                    </div>
-
-                    <div className="flex gap-3">
-                      <Button 
-                        onClick={handleGenerate} 
-                        disabled={isGenerating}
-                        className="bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 flex-1"
-                      >
-                        {isGenerating ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            Generate Content
-                          </>
-                        )}
-                      </Button>
-                      
-                      <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Regenerate
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Generated Content */}
-                {generatedContent && (
+                {apiKey && (
                   <Card className="dark-card border-gray-800">
                     <CardHeader>
-                      <CardTitle className="text-white flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-400" />
-                          Generated Content
-                        </span>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={copyToClipboard} className="border-gray-600 hover:bg-gray-800">
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
-                            <Save className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
-                            <Share2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Settings className="w-5 h-5" />
+                        Configuration
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-                        <pre className="text-gray-200 whitespace-pre-wrap font-sans">{generatedContent}</pre>
+                    <CardContent className="space-y-6">
+                      <div>
+                        <Label className="text-gray-200 mb-2 block">AI Model</Label>
+                        <Select value={selectedModel} onValueChange={setSelectedModel}>
+                          <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-800 border-gray-700">
+                            {aiModels.map((model) => (
+                              <SelectItem key={model.id} value={model.id} className="text-white hover:bg-gray-700">
+                                <div className="flex items-center gap-2">
+                                  <span>{model.name}</span>
+                                  <Badge variant="outline" className="text-xs border-cyan-500 text-cyan-400">
+                                    {model.badge}
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      
-                      <div className="mt-6 flex flex-wrap gap-2">
-                        <Badge className="bg-green-900/50 border-green-500/50 text-green-400">
-                          Optimized for {platform}
-                        </Badge>
-                        <Badge className="bg-blue-900/50 border-blue-500/50 text-blue-400">
-                          {tone} tone
-                        </Badge>
-                        <Badge className="bg-purple-900/50 border-purple-500/50 text-purple-400">
-                          {generatedContent.length} characters
-                        </Badge>
-                        <Badge className="bg-orange-900/50 border-orange-500/50 text-orange-400">
-                          {contentType} format
-                        </Badge>
+
+                      <div>
+                        <Label className="text-gray-200 mb-2 block">Content Type</Label>
+                        <Select value={contentType} onValueChange={setContentType}>
+                          <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-800 border-gray-700">
+                            {contentTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.id} className="text-white hover:bg-gray-700">
+                                <div className="flex items-center gap-2">
+                                  <type.icon className="w-4 h-4" />
+                                  {type.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label className="text-gray-200 mb-2 block">Platform</Label>
+                        <Select value={platform} onValueChange={setPlatform}>
+                          <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-800 border-gray-700">
+                            {platforms.map((platform) => (
+                              <SelectItem key={platform.id} value={platform.id} className="text-white hover:bg-gray-700">
+                                {platform.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label className="text-gray-200 mb-2 block">Tone</Label>
+                        <Select value={tone} onValueChange={setTone}>
+                          <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-800 border-gray-700">
+                            {tones.map((tone) => (
+                              <SelectItem key={tone} value={tone.toLowerCase()} className="text-white hover:bg-gray-700">
+                                {tone}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label className="text-gray-200 mb-3 block">Creativity: {creativity[0]}</Label>
+                        <Slider
+                          value={creativity}
+                          onValueChange={setCreativity}
+                          max={1}
+                          min={0}
+                          step={0.1}
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-gray-200 mb-3 block">Max Length: {maxLength[0]} chars</Label>
+                        <Slider
+                          value={maxLength}
+                          onValueChange={setMaxLength}
+                          max={2000}
+                          min={50}
+                          step={10}
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div className="pt-4">
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+                          onClick={() => setApiKey('')}
+                        >
+                          <Key className="w-4 h-4 mr-2" />
+                          Change API Key
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
                 )}
               </div>
+
+              {/* Generation Panel */}
+              {apiKey && (
+                <div className="lg:col-span-2 space-y-6">
+                  <Card className="dark-card border-gray-800">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Wand2 className="w-5 h-5" />
+                        AI Content Generator
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">
+                        Describe what you want to create and let AI do the magic
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div>
+                        <Label className="text-gray-200 mb-2 block">Prompt</Label>
+                        <Textarea
+                          placeholder="Describe your content... e.g., 'Create an engaging Instagram reel about AI productivity tips with a hook that grabs attention in the first 3 seconds'"
+                          value={prompt}
+                          onChange={(e) => setPrompt(e.target.value)}
+                          className="bg-gray-800 border-gray-700 text-white min-h-[140px]"
+                        />
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button 
+                          onClick={handleGenerate} 
+                          disabled={isGenerating || !prompt.trim()}
+                          className="bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 flex-1"
+                        >
+                          {isGenerating ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Generate Content
+                            </>
+                          )}
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                          onClick={handleGenerate}
+                          disabled={isGenerating || !prompt.trim()}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Regenerate
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Generated Content */}
+                  {generatedContent && (
+                    <Card className="dark-card border-gray-800">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-400" />
+                            Generated Content
+                          </span>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={copyToClipboard} className="border-gray-600 hover:bg-gray-800">
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+                              <Save className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+                              <Share2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                          <pre className="text-gray-200 whitespace-pre-wrap font-sans">{generatedContent}</pre>
+                        </div>
+                        
+                        <div className="mt-6 flex flex-wrap gap-2">
+                          <Badge className="bg-green-900/50 border-green-500/50 text-green-400">
+                            Optimized for {platform}
+                          </Badge>
+                          <Badge className="bg-blue-900/50 border-blue-500/50 text-blue-400">
+                            {tone} tone
+                          </Badge>
+                          <Badge className="bg-purple-900/50 border-purple-500/50 text-purple-400">
+                            {generatedContent.length} characters
+                          </Badge>
+                          <Badge className="bg-orange-900/50 border-orange-500/50 text-orange-400">
+                            {contentType} format
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
             </div>
           </TabsContent>
 
