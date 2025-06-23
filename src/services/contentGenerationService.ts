@@ -1,4 +1,3 @@
-
 export interface ContentGenerationParams {
   prompt: string;
   contentType: string;
@@ -17,21 +16,14 @@ export interface GeneratedContent {
 }
 
 export class ContentGenerationService {
-  private apiKey: string | null = null;
+  private apiKey: string;
 
-  constructor(apiKey?: string) {
-    this.apiKey = apiKey || null;
-  }
-
-  setApiKey(apiKey: string) {
-    this.apiKey = apiKey;
+  constructor() {
+    // Preset API key - in a production app, this should be stored securely in the backend
+    this.apiKey = 'sk-proj-your-openai-api-key-here';
   }
 
   async generateContent(params: ContentGenerationParams): Promise<GeneratedContent> {
-    if (!this.apiKey) {
-      throw new Error('OpenAI API key is required');
-    }
-
     const systemPrompt = this.buildSystemPrompt(params);
     const userPrompt = this.buildUserPrompt(params);
 
