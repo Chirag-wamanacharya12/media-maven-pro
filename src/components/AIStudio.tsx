@@ -10,6 +10,7 @@ import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Wand2, 
   Video, 
@@ -30,13 +31,16 @@ import {
   Heart,
   MessageCircle,
   Share,
-  Eye
+  Eye,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { ContentGenerationService, type ContentGenerationParams } from '@/services/contentGenerationService';
 
 const AIStudio = () => {
   const [activeTab, setActiveTab] = useState('content-gen');
   const [contentGenerationService] = useState(() => new ContentGenerationService());
+  const { toast } = useToast();
   
   // Content Generation State
   const [prompt, setPrompt] = useState('');
@@ -48,6 +52,7 @@ const AIStudio = () => {
   const [generatedContent, setGeneratedContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [characterCount, setCharacterCount] = useState(0);
+  const [generationSuccess, setGenerationSuccess] = useState(false);
 
   // Video Processing State
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -65,12 +70,21 @@ const AIStudio = () => {
   });
 
   const handleGenerateContent = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {
+      toast({
+        title: "Prompt Required",
+        description: "Please enter a prompt to generate content.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsGenerating(true);
+    setGenerationSuccess(false);
+    
     try {
       const params: ContentGenerationParams = {
-        prompt,
+        prompt: prompt.trim(),
         contentType,
         platform,
         tone,
@@ -78,12 +92,30 @@ const AIStudio = () => {
         maxLength: maxLength[0]
       };
 
+      console.log('Starting content generation with params:', params);
+      
       const result = await contentGenerationService.generateContent(params);
+      
       setGeneratedContent(result.content);
       setCharacterCount(result.characterCount);
+      setGenerationSuccess(true);
+      
+      toast({
+        title: "Content Generated Successfully!",
+        description: `Generated ${result.contentType} for ${result.platform} (${result.characterCount} characters)`,
+      });
+      
     } catch (error) {
       console.error('Failed to generate content:', error);
-      setGeneratedContent('Failed to generate content. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setGeneratedContent(`Error: ${errorMessage}`);
+      setGenerationSuccess(false);
+      
+      toast({
+        title: "Generation Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -92,39 +124,101 @@ const AIStudio = () => {
   const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setVideoFile(file);
-      console.log('Video uploaded:', file.name);
+      if (file.type.startsWith('video/')) {
+        setVideoFile(file);
+        toast({
+          title: "Video Uploaded",
+          description: `${file.name} has been uploaded successfully.`,
+        });
+      } else {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a valid video file.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleVideoSplit = () => {
-    if (!videoFile) return;
+    if (!videoFile) {
+      toast({
+        title: "No Video Selected",
+        description: "Please upload a video file first.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setVideoProcessing(true);
     setProcessingProgress(0);
+    setGeneratedClips([]);
     
-    // Simulate video processing
+    // Simulate video processing with realistic progress
     const interval = setInterval(() => {
       setProcessingProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
           setVideoProcessing(false);
-          // Simulate generated clips
-          setGeneratedClips([
-            { id: 1, title: 'Clip 1: Introduction', duration: '0:30', thumbnail: '/placeholder.svg' },
-            { id: 2, title: 'Clip 2: Main Content', duration: '0:45', thumbnail: '/placeholder.svg' },
-            { id: 3, title: 'Clip 3: Call to Action', duration: '0:25', thumbnail: '/placeholder.svg' }
-          ]);
+          // Generate realistic clips
+          const clips = [
+            { 
+              id: 1, 
+              title: 'Opening Hook', 
+              duration: '0:15', 
+              thumbnail: '/placeholder.svg',
+              description: 'Attention-grabbing opening segment'
+            },
+            { 
+              id: 2, 
+              title: 'Main Content', 
+              duration: '0:45', 
+              thumbnail: '/placeholder.svg',
+              description: 'Core message and value delivery'
+            },
+            { 
+              id: 3, 
+              title: 'Call to Action', 
+              duration: '0:20', 
+              thumbnail: '/placeholder.svg',
+              description: 'Engagement and next steps'
+            }
+          ];
+          setGeneratedClips(clips);
+          
+          toast({
+            title: "Video Processing Complete!",
+            description: `Successfully generated ${clips.length} short clips from your video.`,
+          });
           return 100;
         }
-        return prev + 10;
+        return prev + 5;
       });
-    }, 300);
+    }, 200);
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    console.log('Content copied to clipboard');
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Copied to Clipboard",
+        description: "Content has been copied to your clipboard.",
+      });
+    } catch (error) {
+      toast({
+        title: "Copy Failed",
+        description: "Failed to copy content to clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const downloadClip = (clip: any) => {
+    toast({
+      title: "Download Started",
+      description: `Downloading ${clip.title}...`,
+    });
+    // In a real implementation, this would trigger the actual download
   };
 
   return (
@@ -176,7 +270,7 @@ const AIStudio = () => {
                   <div>
                     <Label className="text-gray-200">Content Prompt</Label>
                     <Textarea
-                      placeholder="Describe what content you want to create..."
+                      placeholder="Example: Create a post about sustainable living tips for beginners..."
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       className="bg-gray-800 border-gray-700 text-white mt-2"
@@ -288,6 +382,9 @@ const AIStudio = () => {
                   <CardTitle className="text-white flex items-center gap-2">
                     <FileText className="w-5 h-5 text-green-400" />
                     Generated Content
+                    {generationSuccess && (
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                    )}
                   </CardTitle>
                   <CardDescription className="text-gray-400">
                     Your AI-generated content will appear here
@@ -296,12 +393,17 @@ const AIStudio = () => {
                 <CardContent>
                   {generatedContent ? (
                     <div className="space-y-4">
-                      <div className="bg-gray-800 p-4 rounded-lg">
+                      <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-cyan-400">
                         <p className="text-white whitespace-pre-wrap">{generatedContent}</p>
                       </div>
                       
                       <div className="flex items-center justify-between text-sm text-gray-400">
-                        <span>Characters: {characterCount}</span>
+                        <div className="flex items-center gap-4">
+                          <span>Characters: {characterCount}/{maxLength[0]}</span>
+                          <Badge variant={characterCount <= maxLength[0] ? "default" : "destructive"}>
+                            {characterCount <= maxLength[0] ? "Within limit" : "Over limit"}
+                          </Badge>
+                        </div>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
@@ -316,6 +418,7 @@ const AIStudio = () => {
                             size="sm"
                             variant="outline"
                             onClick={handleGenerateContent}
+                            disabled={!prompt.trim() || isGenerating}
                             className="border-gray-700 text-gray-300 hover:bg-gray-800"
                           >
                             <RefreshCw className="w-4 h-4 mr-1" />
@@ -327,7 +430,10 @@ const AIStudio = () => {
                   ) : (
                     <div className="text-center py-12 text-gray-500">
                       <FileText className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                      <p>Enter a prompt and click "Generate Content" to get started</p>
+                      <p className="mb-2">Enter a prompt and click "Generate Content" to get started</p>
+                      <p className="text-sm text-gray-600">
+                        Try: "Create an Instagram post about morning routines for productivity"
+                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -366,8 +472,13 @@ const AIStudio = () => {
                         <div className="text-center">
                           <Upload className="w-8 h-8 mx-auto mb-2 text-gray-500" />
                           <p className="text-gray-500">
-                            {videoFile ? videoFile.name : 'Click to upload video'}
+                            {videoFile ? videoFile.name : 'Click to upload video (MP4, MOV, AVI)'}
                           </p>
+                          {videoFile && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              Size: {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
+                            </p>
+                          )}
                         </div>
                       </label>
                     </div>
@@ -375,15 +486,16 @@ const AIStudio = () => {
 
                   {videoFile && (
                     <div className="space-y-4">
-                      <div className="bg-gray-800 p-4 rounded-lg">
+                      <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-purple-400">
                         <div className="flex items-center gap-3">
                           <Video className="w-6 h-6 text-purple-400" />
-                          <div>
+                          <div className="flex-1">
                             <p className="text-white font-medium">{videoFile.name}</p>
                             <p className="text-gray-400 text-sm">
-                              Size: {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
+                              Size: {(videoFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for processing
                             </p>
                           </div>
+                          <CheckCircle className="w-5 h-5 text-green-400" />
                         </div>
                       </div>
 
@@ -394,6 +506,12 @@ const AIStudio = () => {
                             <span className="text-purple-400">{processingProgress}%</span>
                           </div>
                           <Progress value={processingProgress} className="bg-gray-800" />
+                          <p className="text-xs text-gray-500">
+                            {processingProgress < 30 && "Analyzing video content..."}
+                            {processingProgress >= 30 && processingProgress < 60 && "Identifying key segments..."}
+                            {processingProgress >= 60 && processingProgress < 90 && "Creating short clips..."}
+                            {processingProgress >= 90 && "Finalizing clips..."}
+                          </p>
                         </div>
                       )}
 
@@ -405,12 +523,12 @@ const AIStudio = () => {
                         {videoProcessing ? (
                           <>
                             <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            Processing...
+                            Processing... {processingProgress}%
                           </>
                         ) : (
                           <>
                             <Scissors className="w-4 h-4 mr-2" />
-                            Split into Shorts
+                            Split into Short Clips
                           </>
                         )}
                       </Button>
@@ -424,27 +542,31 @@ const AIStudio = () => {
                   <CardTitle className="text-white flex items-center gap-2">
                     <Play className="w-5 h-5 text-green-400" />
                     Generated Clips
+                    {generatedClips.length > 0 && (
+                      <Badge className="bg-green-600">{generatedClips.length}</Badge>
+                    )}
                   </CardTitle>
                   <CardDescription className="text-gray-400">
-                    Your AI-generated video clips
+                    Your AI-generated video clips ready for use
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {generatedClips.length > 0 ? (
                     <div className="space-y-3">
                       {generatedClips.map((clip) => (
-                        <div key={clip.id} className="bg-gray-800 p-4 rounded-lg">
+                        <div key={clip.id} className="bg-gray-800 p-4 rounded-lg border-l-4 border-green-400">
                           <div className="flex items-center gap-3">
                             <div className="w-16 h-12 bg-gray-700 rounded flex items-center justify-center">
                               <Play className="w-6 h-6 text-gray-400" />
                             </div>
                             <div className="flex-1">
                               <p className="text-white font-medium">{clip.title}</p>
-                              <p className="text-gray-400 text-sm">{clip.duration}</p>
+                              <p className="text-gray-400 text-sm">{clip.duration} • {clip.description}</p>
                             </div>
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={() => downloadClip(clip)}
                               className="border-gray-700 text-gray-300 hover:bg-gray-800"
                             >
                               <Download className="w-4 h-4" />
@@ -452,11 +574,19 @@ const AIStudio = () => {
                           </div>
                         </div>
                       ))}
+                      <div className="pt-2 border-t border-gray-800">
+                        <p className="text-sm text-green-400 text-center">
+                          ✅ All clips generated successfully! Ready for download and use.
+                        </p>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-500">
                       <Video className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                      <p>Upload and process a video to see generated clips</p>
+                      <p className="mb-2">Upload and process a video to see generated clips</p>
+                      <p className="text-sm text-gray-600">
+                        Supported formats: MP4, MOV, AVI • Max size: 100MB
+                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -468,12 +598,12 @@ const AIStudio = () => {
           <TabsContent value="ai-tools" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { title: 'Caption Generator', icon: FileText, color: 'cyan', description: 'Generate engaging captions for your posts' },
-                { title: 'Hashtag Research', icon: Target, color: 'purple', description: 'Find trending hashtags for maximum reach' },
-                { title: 'Content Optimizer', icon: TrendingUp, color: 'green', description: 'Optimize your content for better engagement' },
-                { title: 'Trend Analysis', icon: BarChart3, color: 'pink', description: 'Analyze current trends in your niche' },
-                { title: 'Competitor Analysis', icon: Users, color: 'orange', description: 'Analyze your competitors\' strategies' },
-                { title: 'Content Calendar', icon: Clock, color: 'blue', description: 'Plan and schedule your content' }
+                { title: 'Caption Generator', icon: FileText, color: 'cyan', description: 'Generate engaging captions for your posts', action: () => toast({ title: "Caption Generator", description: "Coming soon! This will generate captions for your images." }) },
+                { title: 'Hashtag Research', icon: Target, color: 'purple', description: 'Find trending hashtags for maximum reach', action: () => toast({ title: "Hashtag Research", description: "Coming soon! This will find the best hashtags for your content." }) },
+                { title: 'Content Optimizer', icon: TrendingUp, color: 'green', description: 'Optimize your content for better engagement', action: () => toast({ title: "Content Optimizer", description: "Coming soon! This will analyze and optimize your content." }) },
+                { title: 'Trend Analysis', icon: BarChart3, color: 'pink', description: 'Analyze current trends in your niche', action: () => toast({ title: "Trend Analysis", description: "Coming soon! This will show you trending topics in your industry." }) },
+                { title: 'Competitor Analysis', icon: Users, color: 'orange', description: 'Analyze your competitors\' strategies', action: () => toast({ title: "Competitor Analysis", description: "Coming soon! This will analyze your competitors' content strategies." }) },
+                { title: 'Content Calendar', icon: Clock, color: 'blue', description: 'Plan and schedule your content', action: () => toast({ title: "Content Calendar", description: "Coming soon! This will help you plan your content schedule." }) }
               ].map((tool, index) => (
                 <Card key={index} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors cursor-pointer">
                   <CardContent className="p-6">
@@ -481,11 +611,11 @@ const AIStudio = () => {
                       <tool.icon className={`w-6 h-6 text-${tool.color}-400`} />
                     </div>
                     <h3 className="text-white font-semibold mb-2">{tool.title}</h3>
-                    <p className="text-gray-400 text-sm">{tool.description}</p>
+                    <p className="text-gray-400 text-sm mb-4">{tool.description}</p>
                     <Button 
-                      className="w-full mt-4" 
+                      className="w-full" 
                       variant="outline"
-                      onClick={() => console.log(`${tool.title} clicked`)}
+                      onClick={tool.action}
                     >
                       Launch Tool
                     </Button>
@@ -504,6 +634,7 @@ const AIStudio = () => {
                     <div>
                       <p className="text-gray-400 text-sm">Total Posts</p>
                       <p className="text-2xl font-bold text-white">{analyticsData.totalPosts}</p>
+                      <p className="text-xs text-green-400 mt-1">+12 this month</p>
                     </div>
                     <FileText className="w-8 h-8 text-cyan-400" />
                   </div>
@@ -516,6 +647,7 @@ const AIStudio = () => {
                     <div>
                       <p className="text-gray-400 text-sm">Total Reach</p>
                       <p className="text-2xl font-bold text-white">{analyticsData.totalReach.toLocaleString()}</p>
+                      <p className="text-xs text-green-400 mt-1">+8.2% this week</p>
                     </div>
                     <Eye className="w-8 h-8 text-purple-400" />
                   </div>
@@ -528,6 +660,7 @@ const AIStudio = () => {
                     <div>
                       <p className="text-gray-400 text-sm">Engagement Rate</p>
                       <p className="text-2xl font-bold text-white">{analyticsData.engagement}%</p>
+                      <p className="text-xs text-green-400 mt-1">+1.2% this week</p>
                     </div>
                     <Heart className="w-8 h-8 text-pink-400" />
                   </div>
@@ -540,6 +673,7 @@ const AIStudio = () => {
                     <div>
                       <p className="text-gray-400 text-sm">Followers</p>
                       <p className="text-2xl font-bold text-white">{analyticsData.followers.toLocaleString()}</p>
+                      <p className="text-xs text-green-400 mt-1">+{analyticsData.growth}% growth</p>
                     </div>
                     <Users className="w-8 h-8 text-green-400" />
                   </div>
@@ -558,7 +692,8 @@ const AIStudio = () => {
                 <div className="h-64 flex items-center justify-center text-gray-500">
                   <div className="text-center">
                     <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                    <p>Analytics chart will be displayed here</p>
+                    <p className="mb-2">Analytics chart will be displayed here</p>
+                    <p className="text-sm text-gray-600">Connect your social media accounts to see detailed analytics</p>
                   </div>
                 </div>
               </CardContent>
