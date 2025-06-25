@@ -243,19 +243,19 @@ const Integrations = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 animate-fade-in min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="p-4 md:p-6 animate-fade-in min-h-screen bg-gradient-to-br from-gray-900 to-black text-gray-100">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Social Media Integrations</h1>
-            <p className="text-muted-foreground">Connect and manage your social media accounts</p>
+            <p className="text-gray-400">Connect and manage your social media accounts</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button 
               variant="outline" 
               onClick={() => setShowSettings(true)}
-              className="border-slate-300 hover:bg-slate-50"
+              className="border-gray-700 hover:bg-gray-800 text-gray-100"
             >
               <Settings className="w-4 h-4 mr-2" />
               Settings
@@ -269,65 +269,65 @@ const Integrations = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-white/70 backdrop-blur-sm border-slate-200">
+          <Card className="bg-gray-800/70 backdrop-blur-sm border-gray-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-emerald-600">
+                  <p className="text-xl md:text-2xl font-bold text-emerald-400">
                     {platforms.filter(p => p.status === 'connected').length}
                   </p>
-                  <p className="text-sm text-slate-600">Connected</p>
+                  <p className="text-sm text-gray-400">Connected</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-slate-200">
+          <Card className="bg-gray-800/70 backdrop-blur-sm border-gray-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-amber-600" />
+                <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-amber-600">
+                  <p className="text-xl md:text-2xl font-bold text-amber-400">
                     {platforms.filter(p => p.status === 'pending').length}
                   </p>
-                  <p className="text-sm text-slate-600">Pending</p>
+                  <p className="text-sm text-gray-400">Pending</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-slate-200">
+          <Card className="bg-gray-800/70 backdrop-blur-sm border-gray-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-slate-600" />
+                <div className="w-10 h-10 rounded-full bg-gray-700/30 flex items-center justify-center">
+                  <Plus className="w-5 h-5 text-gray-400" />
                 </div>
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-slate-600">
+                  <p className="text-xl md:text-2xl font-bold text-gray-400">
                     {platforms.filter(p => p.status === 'disconnected').length}
                   </p>
-                  <p className="text-sm text-slate-600">Available</p>
+                  <p className="text-sm text-gray-400">Available</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-slate-200">
+          <Card className="bg-gray-800/70 backdrop-blur-sm border-gray-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-red-600" />
+                <div className="w-10 h-10 rounded-full bg-red-900/30 flex items-center justify-center">
+                  <AlertCircle className="w-5 h-5 text-red-400" />
                 </div>
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-red-600">
+                  <p className="text-xl md:text-2xl font-bold text-red-400">
                     {platforms.filter(p => p.status === 'failed').length}
                   </p>
-                  <p className="text-sm text-slate-600">Failed</p>
+                  <p className="text-sm text-gray-400">Failed</p>
                 </div>
               </div>
             </CardContent>
@@ -337,7 +337,7 @@ const Integrations = () => {
         {/* Platform Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {platforms.map((platform) => (
-            <Card key={platform.id} className="bg-white/70 backdrop-blur-sm border-slate-200 hover:shadow-lg transition-all duration-200 group">
+            <Card key={platform.id} className="bg-gray-800/70 backdrop-blur-sm border-gray-700 hover:shadow-lg transition-all duration-200 group">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${platform.color}`}>
@@ -351,18 +351,18 @@ const Integrations = () => {
                         platform.status === 'failed' ? 'destructive' : 'outline'
                       }
                       className={
-                        platform.status === 'connected' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' :
-                        platform.status === 'pending' ? 'bg-amber-100 text-amber-700 hover:bg-amber-100' :
-                        platform.status === 'failed' ? 'bg-red-100 text-red-700 hover:bg-red-100' :
-                        'bg-slate-100 text-slate-700 hover:bg-slate-100'
+                        platform.status === 'connected' ? 'bg-emerald-700/20 text-emerald-400 hover:bg-emerald-700/20' :
+                        platform.status === 'pending' ? 'bg-amber-700/20 text-amber-400 hover:bg-amber-700/20' :
+                        platform.status === 'failed' ? 'bg-red-700/20 text-red-400 hover:bg-red-700/20' :
+                        'bg-gray-700/20 text-gray-400 hover:bg-gray-700/20'
                       }
                     >
                       {platform.status}
                     </Badge>
                   </div>
                 </div>
-                <CardTitle className="text-lg">{platform.name}</CardTitle>
-                <CardDescription className="text-sm">
+                <CardTitle className="text-lg text-gray-100">{platform.name}</CardTitle>
+                <CardDescription className="text-sm text-gray-400">
                   {platform.description}
                 </CardDescription>
               </CardHeader>
@@ -370,38 +370,38 @@ const Integrations = () => {
               <CardContent className="pt-0">
                 {platform.status === 'connected' && platform.connectedAccount && (
                   <div className="space-y-3 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <span className="font-medium">Account:</span>
                       <span className="truncate">{platform.connectedAccount.username}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <span className="font-medium">Connected:</span>
                       <span>{platform.connectedAccount.connectedAt}</span>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-1">
                         <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span className="text-slate-600">{platform.connectedAccount.posts} posts</span>
+                        <span className="text-gray-300">{platform.connectedAccount.posts} posts</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span className="text-slate-600">{platform.connectedAccount.followers} followers</span>
+                        <span className="text-gray-300">{platform.connectedAccount.followers} followers</span>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {platform.status === 'pending' && (
-                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-700">
+                  <div className="mb-4 p-3 bg-amber-900/30 border border-amber-700 rounded-lg">
+                    <p className="text-sm text-amber-400">
                       Check your email to confirm the integration for <strong>{platform.pendingAccount}</strong>
                     </p>
                   </div>
                 )}
 
                 {platform.status === 'failed' && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-700">
+                  <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded-lg">
+                    <p className="text-sm text-red-400">
                       Connection failed. Please try again.
                     </p>
                   </div>
@@ -428,27 +428,28 @@ const Integrations = () => {
                           )}
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-md">
+                      <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700 text-gray-100">
                         <DialogHeader>
-                          <DialogTitle>Connect {platform.name}</DialogTitle>
-                          <DialogDescription>
+                          <DialogTitle className="text-gray-100">Connect {platform.name}</DialogTitle>
+                          <DialogDescription className="text-gray-400">
                             Enter your {platform.name} username to connect your account. We'll send a confirmation email to verify.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                           <div>
-                            <Label htmlFor="username">Username</Label>
+                            <Label htmlFor="username" className="text-gray-300">Username</Label>
                             <Input
                               id="username"
                               placeholder={`Enter your ${platform.name} username`}
                               value={username}
                               onChange={(e) => setUsername(e.target.value)}
+                              className="bg-gray-700 border-gray-600 text-gray-100 placeholder:text-gray-400"
                             />
                           </div>
                           <div className="flex gap-2">
                             <Button 
                               variant="outline" 
-                              className="flex-1"
+                              className="flex-1 border-gray-700 hover:bg-gray-700 text-gray-100"
                               onClick={() => {
                                 setShowConnectDialog(null);
                                 setUsername('');
@@ -479,7 +480,7 @@ const Integrations = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1"
+                        className="flex-1 border-gray-700 hover:bg-gray-800 text-gray-100"
                         onClick={() => window.open(`https://${platform.name.toLowerCase()}.com/${platform.connectedAccount?.username}`, '_blank')}
                       >
                         <ExternalLink className="w-4 h-4 mr-2" />
@@ -489,7 +490,7 @@ const Integrations = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => handleDisconnect(platform.id)}
-                        className="text-red-600 hover:text-red-700 hover:border-red-300"
+                        className="text-red-400 hover:text-red-300 hover:border-red-700 border-gray-700 hover:bg-gray-800"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -499,7 +500,7 @@ const Integrations = () => {
                   {platform.status === 'pending' && (
                     <Button 
                       variant="outline" 
-                      className="flex-1"
+                      className="flex-1 border-gray-700 hover:bg-gray-800 text-gray-100"
                       onClick={() => handleDisconnect(platform.id)}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />

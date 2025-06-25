@@ -11,14 +11,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Wand2, 
-  Video, 
-  Image, 
-  FileText, 
-  BarChart3, 
-  Clock, 
-  Target, 
+import { generateDezgoImage } from '@/services/contentGenerationService';
+import {
+  Wand2,
+  Video,
+  Image,
+  FileText,
+  BarChart3,
+  Clock,
+  Target,
   Sparkles,
   Upload,
   Play,
@@ -41,7 +42,7 @@ const AIStudio = () => {
   const [activeTab, setActiveTab] = useState('content-gen');
   const [contentGenerationService] = useState(() => new ContentGenerationService());
   const { toast } = useToast();
-  
+
   // Content Generation State
   const [prompt, setPrompt] = useState('');
   const [contentType, setContentType] = useState('post');
@@ -53,6 +54,9 @@ const AIStudio = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [characterCount, setCharacterCount] = useState(0);
   const [generationSuccess, setGenerationSuccess] = useState(false);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [isImageGenerating, setIsImageGenerating] = useState(false);
+  const [slideCount, setSlideCount] = useState(4); // Initialize slideCount here
 
   // Video Processing State
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -69,6 +73,54 @@ const AIStudio = () => {
     growth: 15.3
   });
 
+  const handleGenerateImages = async () => {
+    try {
+      setIsImageGenerating(true);
+      const allSlideLines = generatedContent
+      .split('\n')
+      .filter(line => line.trim().startsWith('**Slide'));
+
+      const slidePrompts: string[] = [];
+
+      for (let i = 0; i < slideCount; i++) {
+        const line = allSlideLines[i] || '';
+        const match = line.match(/^\*\*Slide\s*\d+:\*\*\s*(.*)/); // The improved regex
+        const text = match && match[1] ? match[1].trim() : `Slide ${i + 1} visual for topic: ${prompt.slice(0, 50)}...`;
+
+        // Add the cleaning logic here:
+        let cleanText = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/gu, ''); // Remove common emojis
+        cleanText = cleanText.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with single space
+
+        slidePrompts.push(cleanText); // Push the cleaned text
+      }
+
+      const urls: string[] = [];
+
+      for (const slidePrompt of slidePrompts) {
+        // Add a check to ensure prompt is not empty or too short
+        if (slidePrompt.length > 5) { // Basic check for meaningful prompt
+          const blob = await generateDezgoImage(slidePrompt);
+          const url = URL.createObjectURL(blob);
+          urls.push(url);
+        } else {
+          console.warn(`Skipping image generation for short/empty prompt: "${slidePrompt}"`);
+          urls.push('/placeholder.svg'); // Add a placeholder if prompt is bad
+        }
+      }
+
+      setGeneratedImages(urls);
+    } catch (error) {
+      console.error('Image generation failed:', error);
+      toast({
+        title: "Image Generation Failed",
+        description: "Could not generate images. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImageGenerating(false);
+    }
+  };
+
   const handleGenerateContent = async () => {
     if (!prompt.trim()) {
       toast({
@@ -81,7 +133,7 @@ const AIStudio = () => {
 
     setIsGenerating(true);
     setGenerationSuccess(false);
-    
+
     try {
       const params: ContentGenerationParams = {
         prompt: prompt.trim(),
@@ -89,28 +141,29 @@ const AIStudio = () => {
         platform,
         tone,
         creativity: creativity[0],
-        maxLength: maxLength[0]
+        maxLength: maxLength[0],
+        slideCount: contentType === 'carousel' ? slideCount : undefined // Only include if content type is carousel
       };
 
       console.log('Starting content generation with params:', params);
-      
+
       const result = await contentGenerationService.generateContent(params);
-      
+
       setGeneratedContent(result.content);
       setCharacterCount(result.characterCount);
       setGenerationSuccess(true);
-      
+
       toast({
         title: "Content Generated Successfully!",
         description: `Generated ${result.contentType} for ${result.platform} (${result.characterCount} characters)`,
       });
-      
+
     } catch (error) {
       console.error('Failed to generate content:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setGeneratedContent(`Error: ${errorMessage}`);
       setGenerationSuccess(false);
-      
+
       toast({
         title: "Generation Failed",
         description: errorMessage,
@@ -149,11 +202,11 @@ const AIStudio = () => {
       });
       return;
     }
-    
+
     setVideoProcessing(true);
     setProcessingProgress(0);
     setGeneratedClips([]);
-    
+
     // Simulate video processing with realistic progress
     const interval = setInterval(() => {
       setProcessingProgress(prev => {
@@ -162,30 +215,30 @@ const AIStudio = () => {
           setVideoProcessing(false);
           // Generate realistic clips
           const clips = [
-            { 
-              id: 1, 
-              title: 'Opening Hook', 
-              duration: '0:15', 
+            {
+              id: 1,
+              title: 'Opening Hook',
+              duration: '0:15',
               thumbnail: '/placeholder.svg',
               description: 'Attention-grabbing opening segment'
             },
-            { 
-              id: 2, 
-              title: 'Main Content', 
-              duration: '0:45', 
+            {
+              id: 2,
+              title: 'Main Content',
+              duration: '0:45',
               thumbnail: '/placeholder.svg',
               description: 'Core message and value delivery'
             },
-            { 
-              id: 3, 
-              title: 'Call to Action', 
-              duration: '0:20', 
+            {
+              id: 3,
+              title: 'Call to Action',
+              duration: '0:20',
               thumbnail: '/placeholder.svg',
               description: 'Engagement and next steps'
             }
           ];
           setGeneratedClips(clips);
-          
+
           toast({
             title: "Video Processing Complete!",
             description: `Successfully generated ${clips.length} short clips from your video.`,
@@ -219,6 +272,35 @@ const AIStudio = () => {
       description: `Downloading ${clip.title}...`,
     });
     // In a real implementation, this would trigger the actual download
+  };
+
+  // Function to render content with formatting (e.g., bold, italic, strikethrough, inline code)
+  const renderFormattedContent = (text: string) => {
+    // Split by bold (**...**, __...__), italic (*...*, _..._), strikethrough (~~...~~), and inline code (`...`) markers
+    // The order in regex matters: longer patterns (e.g., **) should be matched before shorter ones (e.g., *)
+    const parts = text.split(/(\*\*.*?\*\*|__.*?__|\*.*?\*|_.*?_|~~.*?~~|`.*?`)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        // Double asterisks for bold
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      } else if (part.startsWith('__') && part.endsWith('__')) {
+        // Double underscores for bold
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      } else if (part.startsWith('*') && part.endsWith('*')) {
+        // Single asterisks for italic (changed from bold to align with standard Markdown)
+        return <em key={index}>{part.slice(1, -1)}</em>;
+      } else if (part.startsWith('_') && part.endsWith('_')) {
+        // Single underscores for italic
+        return <em key={index}>{part.slice(1, -1)}</em>;
+      } else if (part.startsWith('~~') && part.endsWith('~~')) {
+        // Double tildes for strikethrough
+        return <s key={index}>{part.slice(2, -2)}</s>;
+      } else if (part.startsWith('`') && part.endsWith('`')) {
+        // Backticks for inline code
+        return <code key={index} className="bg-gray-700 text-yellow-300 px-1 py-0.5 rounded text-sm">{part.slice(1, -1)}</code>;
+      }
+      return part; // Render as plain text
+    });
   };
 
   return (
@@ -316,6 +398,23 @@ const AIStudio = () => {
                     </div>
                   </div>
 
+                  {contentType === 'carousel' && (
+                    <div className="mb-4 max-w-md">
+                      <Label className="text-gray-200">Number of Slides</Label>
+                      <Select value={String(slideCount)} onValueChange={(val) => setSlideCount(Number(val))}>
+                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-2">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-700">
+                          {[...Array(9)].map((_, i) => (
+                            <SelectItem key={i} value={String(i + 2)}>{i + 2}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+
                   <div>
                     <Label className="text-gray-200">Tone</Label>
                     <Select value={tone} onValueChange={setTone}>
@@ -325,10 +424,25 @@ const AIStudio = () => {
                       <SelectContent className="bg-gray-800 border-gray-700">
                         <SelectItem value="professional">Professional</SelectItem>
                         <SelectItem value="casual">Casual</SelectItem>
+                        <SelectItem value="aesthetic ">Aesthetic </SelectItem>
                         <SelectItem value="funny">Funny</SelectItem>
                         <SelectItem value="inspiring">Inspiring</SelectItem>
+                        <SelectItem value="motivational ">Motivational </SelectItem>
+                        <SelectItem value="reality">Real</SelectItem>
+                        <SelectItem value="confident ">Confident </SelectItem>
                         <SelectItem value="educational">Educational</SelectItem>
                         <SelectItem value="promotional">Promotional</SelectItem>
+                        <SelectItem value="friendly">Friendly</SelectItem>
+                        <SelectItem value="sarcastic">Sarcastic</SelectItem>
+                        <SelectItem value="formal">Formal</SelectItem>
+                        <SelectItem value="optimistic">Optimistic</SelectItem>
+                        <SelectItem value="serious">Serious</SelectItem>
+                        <SelectItem value="creative">Creative</SelectItem>
+                        <SelectItem value="humorous">Humorous</SelectItem>
+                        <SelectItem value="informative">Informative</SelectItem>
+                        <SelectItem value="persuasive">Persuasive</SelectItem>
+                        <SelectItem value="hopeful">Hopeful</SelectItem>
+                        <SelectItem value="humble">Humble</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -357,7 +471,7 @@ const AIStudio = () => {
                     />
                   </div>
 
-                  <Button 
+                  <Button
                     onClick={handleGenerateContent}
                     disabled={!prompt.trim() || isGenerating}
                     className="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700"
@@ -394,9 +508,9 @@ const AIStudio = () => {
                   {generatedContent ? (
                     <div className="space-y-4">
                       <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-cyan-400">
-                        <p className="text-white whitespace-pre-wrap">{generatedContent}</p>
+                        <p className="text-white whitespace-pre-wrap">{renderFormattedContent(generatedContent)}</p>
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-sm text-gray-400">
                         <div className="flex items-center gap-4">
                           <span>Characters: {characterCount}/{maxLength[0]}</span>
@@ -426,6 +540,22 @@ const AIStudio = () => {
                           </Button>
                         </div>
                       </div>
+                      {/* {generatedContent && (
+                        <Button onClick={handleGenerateImages} disabled={isImageGenerating} className="mt-4">
+                          {isImageGenerating ? 'Generating Images...' : 'Generate Carousel Images'}
+                        </Button>
+                      )} */}
+
+                      {generatedImages.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                          {generatedImages.map((url, idx) => (
+                            <div key={idx} className="bg-gray-900 p-4 rounded">
+                              <img src={url} alt={`Slide ${idx + 1}`} className="w-full h-auto rounded" />
+                              <p className="text-center text-gray-400 mt-2">Slide {idx + 1}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-500">
@@ -612,8 +742,8 @@ const AIStudio = () => {
                     </div>
                     <h3 className="text-white font-semibold mb-2">{tool.title}</h3>
                     <p className="text-gray-400 text-sm mb-4">{tool.description}</p>
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       variant="outline"
                       onClick={tool.action}
                     >
