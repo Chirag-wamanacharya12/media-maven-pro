@@ -1,4 +1,4 @@
 [build]
   base = "." # This is the directory where Netlify installs dependencies and runs your build command.
   command = "npm run build" # Or "yarn build" if you use Yarn
-  publish = "build"         # This is the folder where your React app's static files are built
+  publish = "dist"         # This is the folder where your React app's static files are built
