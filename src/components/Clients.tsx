@@ -22,9 +22,10 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import ClientDetailsDialog from './ClientDetailsDialog';
 
 // Sample client data
-const clients = [
+const initialClients = [
   {
     id: 1,
     name: 'TechCorp Solutions',
@@ -93,9 +94,12 @@ const clients = [
 ];
 
 const Clients = () => {
+  const [clients, setClients] = useState(initialClients);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [selectedClient, setSelectedClient] = useState<typeof initialClients[0] | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const itemsPerPage = 6;
   
@@ -108,6 +112,19 @@ const Clients = () => {
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentClients = filteredClients.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleClientClick = (client: typeof initialClients[0]) => {
+    setSelectedClient(client);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveClient = (updatedClient: typeof initialClients[0]) => {
+    setClients(prevClients => 
+      prevClients.map(client => 
+        client.id === updatedClient.id ? updatedClient : client
+      )
+    );
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -122,8 +139,11 @@ const Clients = () => {
     }
   };
 
-  const ClientCard = ({ client }: { client: typeof clients[0] }) => (
-    <Card className="dark-card hover:border-cyan-500/30 transition-all duration-200">
+  const ClientCard = ({ client }: { client: typeof initialClients[0] }) => (
+    <Card 
+      className="dark-card hover:border-cyan-500/30 transition-all duration-200 cursor-pointer"
+      onClick={() => handleClientClick(client)}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -138,7 +158,7 @@ const Clients = () => {
               <p className="text-sm text-muted-foreground">{client.company}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
             <MoreVertical className="w-4 h-4" />
           </Button>
         </div>
@@ -301,7 +321,11 @@ const Clients = () => {
             </TableHeader>
             <TableBody>
               {currentClients.map((client) => (
-                <TableRow key={client.id}>
+                <TableRow 
+                  key={client.id} 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleClientClick(client)}
+                >
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-8 w-8">
@@ -331,7 +355,7 @@ const Clients = () => {
                   <TableCell className="text-green-400 font-medium">{client.revenue}</TableCell>
                   <TableCell className="text-muted-foreground">{client.lastActivity}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
                       <MoreVertical className="w-4 h-4" />
                     </Button>
                   </TableCell>
@@ -381,6 +405,13 @@ const Clients = () => {
           </PaginationContent>
         </Pagination>
       )}
+
+      <ClientDetailsDialog
+        client={selectedClient}
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onSave={handleSaveClient}
+      />
     </div>
   );
 };
