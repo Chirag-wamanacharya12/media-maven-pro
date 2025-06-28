@@ -10,6 +10,7 @@ import Analytics from '@/components/Analytics';
 import Automation from '@/components/Automation';
 import Integrations from '@/components/Integrations';
 import AIStudio from '@/components/AIStudio';
+import Clients from '@/components/Clients';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -43,15 +44,7 @@ const Index = () => {
       case 'ai-studio':
         return <AIStudio />;
       case 'clients':
-        return (
-          <div className="p-6 animate-fade-in">
-            <h1 className="text-3xl font-bold mb-2">Clients & Workspaces</h1>
-            <p className="text-muted-foreground mb-8">Manage multiple client accounts and team access</p>
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Client management coming soon...</p>
-            </div>
-          </div>
-        );
+        return <Clients />;
       case 'settings':
         return (
           <div className="p-6 animate-fade-in">
