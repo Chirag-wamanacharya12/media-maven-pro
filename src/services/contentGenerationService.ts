@@ -8,6 +8,7 @@ export interface ContentGenerationParams {
   creativity: number;
   maxLength: number;
   slideCount?: number;
+  language: string; // Add this line
 }
 
 export interface GeneratedContent {
@@ -36,9 +37,10 @@ export class ContentGenerationService {
       const cleanedPrompt = this.extractTopic(params.prompt);
 
       const isCarousel = params.contentType === 'carousel';
+      // Modify the promptText to include the language
       const promptText = isCarousel
-        ? `Create a carousel with exactly ${params.slideCount || 4} slides. Number them clearly (e.g., **Slide 1:**). Make each slide short, emoji-rich, and highly relatable. End with a fun CTA.\n\nTopic: ${cleanedPrompt}`
-        : `Generate a ${params.contentType} for ${params.platform} in a ${params.tone} tone. Keep it under ${params.maxLength} characters. Be engaging and natural. Topic: ${cleanedPrompt}`;
+        ? `Strictly in ${params.language}, create a carousel with exactly ${params.slideCount || 4} slides. Number them clearly (e.g., **Slide 1:**). Make each slide short, emoji-rich, and highly relatable. End with a fun CTA.\n\nTopic: ${cleanedPrompt}`
+        : `Strictly in ${params.language}, generate a ${params.contentType} for ${params.platform} in a ${params.tone} tone. Keep it under ${params.maxLength} characters. Be engaging and natural. Topic: ${cleanedPrompt}`;
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
@@ -144,6 +146,34 @@ export class ContentGenerationService {
       platform: params.platform,
       contentType: params.contentType
     };
+  }
+}
+
+// Define an interface for the language object returned by the API
+export interface Language {
+  code: string;
+  name: string;
+}
+
+/**
+ * Fetches a list of supported languages from a free API.
+ * This uses LibreTranslate's public API endpoint for languages.
+ * @returns A promise that resolves to an array of Language objects.
+ */
+export async function fetchSupportedLanguages(): Promise<Language[]> {
+  try {
+    const response = await fetch('https://libretranslate.com/languages');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch languages: ${response.status} - ${response.statusText}`);
+    }
+    const languages: Language[] = await response.json();
+    return languages;
+  } catch (error) {
+    console.error('Error fetching supported languages:', error);
+    if (error instanceof Error) {
+      throw new Error(`Could not retrieve languages: ${error.message}`);
+    }
+    throw new Error('Could not retrieve languages due to an unknown error');
   }
 }
 
