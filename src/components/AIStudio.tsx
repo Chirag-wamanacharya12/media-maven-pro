@@ -1,8 +1,7 @@
-
-import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import React, { useState, useEffect } from 'react'; 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,7 +35,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { ContentGenerationService, type ContentGenerationParams } from '@/services/contentGenerationService';
+import { ContentGenerationService, type ContentGenerationParams, fetchSupportedLanguages, type Language } from '@/services/contentGenerationService';
 
 const AIStudio = () => {
   const [activeTab, setActiveTab] = useState('content-gen');
@@ -57,12 +56,43 @@ const AIStudio = () => {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isImageGenerating, setIsImageGenerating] = useState(false);
   const [slideCount, setSlideCount] = useState(4); // Initialize slideCount here
+  const [language, setLanguage] = useState('English');
 
   // Video Processing State
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoProcessing, setVideoProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [generatedClips, setGeneratedClips] = useState<any[]>([]);
+  const [supportedLanguages, setSupportedLanguages] = useState<Language[]>([]);
+
+  // Fetch supported languages on component mount
+React.useEffect(() => {
+    const getLanguages = async () => {
+      try {
+        const languages = await fetchSupportedLanguages();
+        setSupportedLanguages(languages);
+        // Set the default language to 'English' (or the name corresponding to 'en')
+        const defaultLang = languages.find(lang => lang.code === 'en');
+        if (defaultLang) {
+          setLanguage(defaultLang.name); // Set the state to the language's name
+        } else {
+          setLanguage('English'); // Fallback if 'en' is not found
+        }
+      } catch (error) {
+        console.error('Failed to fetch supported languages:', error);
+        toast({
+          title: "Language Fetch Error",
+          description: "Could not load supported languages. Defaulting to English.",
+          variant: "destructive",
+        });
+        // Fallback to a hardcoded English if API fails
+        setSupportedLanguages([{ code: 'en', name: 'English' }]);
+        setLanguage('English');
+      }
+    };
+    getLanguages();
+  }, []);
+
 
   // Analytics State
   const [analyticsData] = useState({
@@ -142,7 +172,8 @@ const AIStudio = () => {
         tone,
         creativity: creativity[0],
         maxLength: maxLength[0],
-        slideCount: contentType === 'carousel' ? slideCount : undefined // Only include if content type is carousel
+        slideCount: contentType === 'carousel' ? slideCount : undefined, // Only include if content type is carousel
+        language // Add the language property here
       };
 
       console.log('Starting content generation with params:', params);
@@ -443,6 +474,22 @@ const AIStudio = () => {
                         <SelectItem value="persuasive">Persuasive</SelectItem>
                         <SelectItem value="hopeful">Hopeful</SelectItem>
                         <SelectItem value="humble">Humble</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-gray-200">Language</Label>
+                    <Select value={language} onValueChange={setLanguage}>
+                      <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-700">
+                        {supportedLanguages.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.name}> {/* <--- CHANGE THIS LINE */}
+                            {lang.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
